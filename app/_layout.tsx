@@ -1,6 +1,7 @@
 import { colors } from '@/constants/theme';
 import { BoutiqueProvider } from '@/lib/BoutiqueContext';
 import { DatabaseProvider } from '@/lib/db/DbProvider';
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Suspense } from 'react';
@@ -25,6 +26,15 @@ function LoadingScreen() {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    ionicons: require('../assets/fonts/Ionicons.ttf'),
+    Ionicons: require('../assets/fonts/Ionicons.ttf'),
+  });
+
+  if (!fontsLoaded) {
+    return <LoadingScreen />;
+  }
+
   return (
     <Suspense fallback={<LoadingScreen />}>
       <DatabaseProvider>

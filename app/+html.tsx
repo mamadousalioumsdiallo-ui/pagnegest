@@ -32,4 +32,18 @@ body {
   margin: 0;
   overflow: hidden;
 }
+@font-face {
+  font-family: 'ionicons';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('/pagnegest/fonts/Ionicons.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Ionicons';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('/pagnegest/fonts/Ionicons.ttf') format('truetype');
+}
 `;
