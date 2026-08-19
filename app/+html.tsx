@@ -13,8 +13,14 @@ export default function Root({ children }: { children: ReactNode }) {
         />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="PagneGest" />
-        <meta name="theme-color" content="#8C2F1F" />
+        <meta name="theme-color" content="#6E1C16" />
         <title>PagneGest — boutique de pagnes</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Outfit:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
         <ScrollViewStyleReset />
         <style dangerouslySetInnerHTML={{ __html: responsiveBackground }} />
       </head>
@@ -26,11 +32,12 @@ export default function Root({ children }: { children: ReactNode }) {
 const responsiveBackground = `
 html, body, #root {
   height: 100%;
-  background-color: #F6EFE4;
+  background-color: #F3EBE0;
 }
 body {
   margin: 0;
   overflow: hidden;
+  font-family: Outfit, system-ui, sans-serif;
 }
 @font-face {
   font-family: 'ionicons';

@@ -1,13 +1,14 @@
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { colors, spacing } from '@/constants/theme';
+import { StackBody } from '@/components/ui/Screen';
+import { colors, type } from '@/constants/theme';
 import { useBoutique } from '@/lib/BoutiqueContext';
 import { getCustomer, getSale, listSaleItems } from '@/lib/db/queries';
 import { formatDateTime, formatMoney, formatQty, paymentLabel } from '@/lib/format';
 import type { Customer, Sale, SaleItem } from '@/lib/types';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 export default function SaleDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -34,7 +35,7 @@ export default function SaleDetailScreen() {
   if (!sale) {
     return (
       <View style={styles.center}>
-        <Text style={{ color: colors.inkSoft }}>Vente introuvable.</Text>
+        <Text style={type.muted}>Vente introuvable.</Text>
       </View>
     );
   }
@@ -42,25 +43,25 @@ export default function SaleDetailScreen() {
   const remaining = Math.max(0, sale.total - sale.paid);
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.cream }} contentContainerStyle={styles.content}>
-      <Card style={{ gap: 6 }}>
-        <Text style={styles.kicker}>{paymentLabel(sale.payment_method)}</Text>
+    <StackBody>
+      <Card style={{ gap: 8 }}>
+        <Text style={type.kicker}>{paymentLabel(sale.payment_method)}</Text>
         <Text style={styles.total}>{formatMoney(sale.total)}</Text>
-        <Text style={styles.muted}>{formatDateTime(sale.created_at)}</Text>
-        <Text style={styles.muted}>
+        <Text style={type.muted}>{formatDateTime(sale.created_at)}</Text>
+        <Text style={type.muted}>
           Encaissé {formatMoney(sale.paid)}
           {remaining > 0 ? ` · reste ${formatMoney(remaining)}` : ' · soldée'}
         </Text>
-        {sale.note ? <Text style={styles.muted}>{sale.note}</Text> : null}
+        {sale.note ? <Text style={type.muted}>{sale.note}</Text> : null}
       </Card>
 
       <Card style={{ gap: 8 }}>
-        <Text style={styles.section}>Articles</Text>
+        <Text style={type.section}>Articles</Text>
         {items.map((item) => (
           <View key={item.id} style={styles.item}>
             <View style={{ flex: 1 }}>
               <Text style={styles.name}>{item.product_name}</Text>
-              <Text style={styles.muted}>
+              <Text style={type.muted}>
                 {formatQty(item.quantity)} × {formatMoney(item.unit_price)}
               </Text>
             </View>
@@ -70,63 +71,42 @@ export default function SaleDetailScreen() {
       </Card>
 
       <Card style={{ gap: 8 }}>
-        <Text style={styles.section}>Client</Text>
+        <Text style={type.section}>Client</Text>
         <Text style={styles.name}>{customer?.name ?? 'Client passage'}</Text>
-        {customer?.phone ? <Text style={styles.muted}>{customer.phone}</Text> : null}
+        {customer?.phone ? <Text style={type.muted}>{customer.phone}</Text> : null}
         {customer ? (
           <Button label="Voir la fiche client" variant="secondary" onPress={() => router.push(`/client/${customer.id}`)} />
         ) : null}
       </Card>
-    </ScrollView>
+    </StackBody>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
-    padding: spacing.md,
-    gap: spacing.md,
-    maxWidth: 560,
-    width: '100%',
-    alignSelf: 'center',
-  },
   center: {
     flex: 1,
     backgroundColor: colors.cream,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  kicker: {
-    color: colors.gold,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
   total: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: colors.ink,
-  },
-  muted: {
-    color: colors.inkSoft,
-  },
-  section: {
-    fontWeight: '800',
-    color: colors.ink,
-    fontSize: 16,
+    ...type.display,
+    fontSize: 36,
   },
   item: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 6,
+    paddingVertical: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.line,
   },
   name: {
-    fontWeight: '700',
-    color: colors.ink,
+    ...type.body,
+    fontWeight: '600',
   },
   amount: {
-    fontWeight: '800',
+    ...type.money,
+    fontSize: 15,
     color: colors.forest,
   },
 });

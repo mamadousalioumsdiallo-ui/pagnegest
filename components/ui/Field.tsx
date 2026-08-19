@@ -1,4 +1,4 @@
-import { colors, radius, spacing } from '@/constants/theme';
+import { colors, fonts, radius, spacing, type } from '@/constants/theme';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 export function Field({
@@ -18,7 +18,7 @@ export function Field({
 }) {
   return (
     <View style={styles.wrap}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={type.label}>{label}</Text>
       <TextInput
         value={value}
         onChangeText={onChangeText}
@@ -34,28 +34,22 @@ export function Field({
 
 const styles = StyleSheet.create({
   wrap: {
-    gap: 6,
-  },
-  label: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.inkSoft,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
+    gap: 8,
   },
   input: {
     backgroundColor: colors.paper,
     borderWidth: 1,
     borderColor: colors.line,
     borderRadius: radius.md,
-    minHeight: 48,
+    minHeight: 52,
     paddingHorizontal: spacing.md,
     color: colors.ink,
     fontSize: 16,
+    fontFamily: fonts.body,
   },
   multiline: {
-    minHeight: 88,
+    minHeight: 96,
     textAlignVertical: 'top',
-    paddingTop: 12,
+    paddingTop: 14,
   },
 });

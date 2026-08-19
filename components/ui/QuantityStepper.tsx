@@ -1,4 +1,4 @@
-import { colors, radius } from '@/constants/theme';
+import { colors, fonts, radius } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -53,7 +53,8 @@ const styles = StyleSheet.create({
   value: {
     minWidth: 28,
     textAlign: 'center',
-    fontWeight: '800',
+    fontFamily: fonts.body,
+    fontWeight: '700',
     color: colors.ink,
     fontVariant: ['tabular-nums'],
   },

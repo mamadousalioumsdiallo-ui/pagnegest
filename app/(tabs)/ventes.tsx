@@ -1,13 +1,12 @@
 import { Button, Fab } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import { ListRow } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Screen, Title } from '@/components/ui/Screen';
-import { colors, spacing } from '@/constants/theme';
+import { colors, fonts, radius, spacing, type } from '@/constants/theme';
 import { useBoutique } from '@/lib/BoutiqueContext';
 import { listSales } from '@/lib/db/queries';
 import { formatDateTime, formatMoney, paymentLabel } from '@/lib/format';
 import type { SaleWithDetails } from '@/lib/types';
-import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -39,7 +38,7 @@ export default function SalesScreen() {
 
   return (
     <Screen>
-      <Title subtitle={`${sales.length} vente(s) · ${formatMoney(total)}`}>Ventes</Title>
+      <Title subtitle={`${sales.length} ticket${sales.length > 1 ? 's' : ''} · ${formatMoney(total)}`}>Ventes</Title>
       <View style={styles.periods}>
         {PERIODS.map((item) => (
           <Pressable
@@ -55,26 +54,25 @@ export default function SalesScreen() {
           <EmptyState
             icon="receipt-outline"
             title="Aucune vente"
-            subtitle="Enregistrez une vente comptant ou à crédit."
+            subtitle="Enregistrez une vente comptant, un acompte ou un crédit."
             action={<Button label="Nouvelle vente" onPress={() => router.push('/vente/nouvelle')} />}
           />
         ) : (
           sales.map((sale) => (
-            <Card key={sale.id} onPress={() => router.push(`/vente/${sale.id}`)} style={styles.card}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.name}>{sale.customer_name ?? 'Client passage'}</Text>
-                <Text style={styles.meta}>
-                  {formatDateTime(sale.created_at)} · {sale.item_count} article(s) · {paymentLabel(sale.payment_method)}
-                </Text>
-              </View>
-              <View style={{ alignItems: 'flex-end' }}>
-                <Text style={styles.amount}>{formatMoney(sale.total)}</Text>
-                {sale.total > sale.paid ? (
-                  <Text style={styles.rest}>Reste {formatMoney(sale.total - sale.paid)}</Text>
-                ) : null}
-              </View>
-              <Ionicons name="chevron-forward" size={16} color={colors.inkSoft} />
-            </Card>
+            <ListRow
+              key={sale.id}
+              title={sale.customer_name ?? 'Client passage'}
+              subtitle={`${formatDateTime(sale.created_at)} · ${paymentLabel(sale.payment_method)}`}
+              onPress={() => router.push(`/vente/${sale.id}`)}
+              right={
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={styles.amount}>{formatMoney(sale.total)}</Text>
+                  {sale.total > sale.paid ? (
+                    <Text style={styles.rest}>Reste {formatMoney(sale.total - sale.paid)}</Text>
+                  ) : null}
+                </View>
+              }
+            />
           ))
         )}
         <View style={{ height: 88 }} />
@@ -92,20 +90,21 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   period: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: radius.pill,
     backgroundColor: colors.paper,
     borderWidth: 1,
     borderColor: colors.line,
   },
   periodOn: {
-    backgroundColor: colors.burgundy,
-    borderColor: colors.burgundy,
+    backgroundColor: colors.ink,
+    borderColor: colors.ink,
   },
   periodText: {
     color: colors.ink,
-    fontWeight: '700',
+    fontFamily: fonts.body,
+    fontWeight: '600',
     fontSize: 13,
   },
   periodTextOn: {
@@ -115,28 +114,16 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingBottom: 12,
   },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  name: {
-    fontWeight: '800',
-    color: colors.ink,
-  },
-  meta: {
-    color: colors.inkSoft,
-    fontSize: 12,
-    marginTop: 3,
-  },
   amount: {
-    fontWeight: '800',
+    ...type.money,
+    fontSize: 15,
     color: colors.forest,
   },
   rest: {
     color: colors.danger,
-    fontSize: 12,
-    fontWeight: '700',
-    marginTop: 2,
+    fontSize: 11,
+    fontFamily: fonts.body,
+    fontWeight: '600',
+    marginTop: 3,
   },
 });

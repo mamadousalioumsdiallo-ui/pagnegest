@@ -1,6 +1,7 @@
-import { colors, radius, spacing } from '@/constants/theme';
+import { GoldRule, WaxMark } from '@/components/ui/WaxMark';
+import { colors, fonts, radius, spacing, type } from '@/constants/theme';
 import { type ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export function Screen({
@@ -17,12 +18,40 @@ export function Screen({
   );
 }
 
+export function StackBody({ children }: { children: ReactNode }) {
+  return (
+    <KeyboardAvoidingView style={styles.safe} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView
+        style={styles.safe}
+        contentContainerStyle={styles.stack}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}>
+        {children}
+        <View style={{ height: 36 }} />
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+
 export function Title({ children, subtitle }: { children: ReactNode; subtitle?: string }) {
   return (
     <View style={styles.titleWrap}>
-      <Text style={styles.kicker}>PagneGest</Text>
+      <View style={styles.brandRow}>
+        <Text style={type.kicker}>PagneGest</Text>
+        <WaxMark />
+      </View>
       <Text style={styles.title}>{children}</Text>
+      <GoldRule />
       {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+    </View>
+  );
+}
+
+export function SectionTitle({ children }: { children: ReactNode }) {
+  return (
+    <View style={styles.sectionRow}>
+      <Text style={styles.section}>{children}</Text>
+      <View style={styles.sectionLine} />
     </View>
   );
 }
@@ -35,7 +64,7 @@ export function Badge({
   tone?: 'gold' | 'danger' | 'forest' | 'ink';
 }) {
   const map = {
-    gold: { bg: colors.goldSoft, fg: colors.ink },
+    gold: { bg: colors.goldSoft, fg: colors.goldDeep },
     danger: { bg: colors.dangerSoft, fg: colors.danger },
     forest: { bg: colors.forestSoft, fg: colors.forest },
     ink: { bg: colors.creamDark, fg: colors.inkSoft },
@@ -61,36 +90,56 @@ const styles = StyleSheet.create({
   padded: {
     paddingHorizontal: spacing.md,
   },
+  stack: {
+    padding: spacing.md,
+    gap: spacing.md,
+    maxWidth: 560,
+    width: '100%',
+    alignSelf: 'center',
+  },
   titleWrap: {
     paddingTop: spacing.sm,
     paddingBottom: spacing.md,
-    gap: 2,
+    gap: 6,
   },
-  kicker: {
-    color: colors.gold,
-    fontWeight: '800',
-    letterSpacing: 1.4,
-    textTransform: 'uppercase',
-    fontSize: 11,
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 2,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: colors.ink,
+    ...type.display,
+    fontSize: 38,
   },
   subtitle: {
-    color: colors.inkSoft,
+    ...type.muted,
     fontSize: 14,
-    marginTop: 2,
+  },
+  sectionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 10,
+  },
+  section: {
+    ...type.section,
+  },
+  sectionLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.goldLine,
   },
   badge: {
     borderRadius: radius.pill,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     alignSelf: 'flex-start',
   },
   badgeText: {
+    fontFamily: fonts.body,
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '700',
+    letterSpacing: 0.4,
   },
 });

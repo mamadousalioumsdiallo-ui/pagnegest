@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/Button';
 import { CategoryChips } from '@/components/ui/CategoryChips';
 import { Field } from '@/components/ui/Field';
-import { colors, radius, spacing } from '@/constants/theme';
+import { colors, fonts, radius, spacing, type } from '@/constants/theme';
 import { CATEGORIES, UNITS, type CategoryId } from '@/lib/categories';
 import { formatMoney, parseMoney, parseQty } from '@/lib/format';
 import type { Product } from '@/lib/types';
@@ -96,12 +96,12 @@ export function ProductForm({
     <View style={styles.form}>
       <Field label="Nom" value={form.name} onChangeText={(value) => set('name', value)} placeholder="Ex. Pagne Woodin Super Wax" />
       <View style={{ gap: 6 }}>
-        <Text style={styles.label}>Catégorie</Text>
+        <Text style={type.label}>Catégorie</Text>
         <CategoryChips value={form.category} onChange={(value) => set('category', value)} includeAll={false} />
       </View>
       <Field label="Marque" value={form.brand} onChangeText={(value) => set('brand', value)} placeholder="Woodin, Phoenix, Uniwax, Getzner…" />
       <View style={{ gap: 6 }}>
-        <Text style={styles.label}>Unité</Text>
+        <Text style={type.label}>Unité</Text>
         <View style={styles.units}>
           {UNITS.map((unit) => (
             <Pressable
@@ -161,13 +161,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingBottom: 32,
   },
-  label: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.inkSoft,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
   units: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -187,7 +180,8 @@ const styles = StyleSheet.create({
   },
   unitText: {
     color: colors.ink,
-    fontWeight: '700',
+    fontFamily: fonts.body,
+    fontWeight: '600',
     fontSize: 13,
   },
   unitTextOn: {
@@ -198,11 +192,11 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   hint: {
-    color: colors.inkSoft,
-    fontSize: 13,
+    ...type.muted,
   },
   error: {
     color: colors.danger,
-    fontWeight: '700',
+    fontFamily: fonts.body,
+    fontWeight: '600',
   },
 });

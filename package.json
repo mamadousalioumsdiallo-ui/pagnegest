@@ -10,7 +10,7 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "test": "npx --yes tsx lib/saleMath.test.ts",
-    "predeploy": "expo export -p web && cp dist/index.html dist/404.html",
+    "predeploy": "expo export -p web && node scripts/patch-web-html.mjs",
     "deploy": "gh-pages --nojekyll -d dist"
   },
   "dependencies": {

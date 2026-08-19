@@ -1,15 +1,15 @@
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
-import { Screen, Title } from '@/components/ui/Screen';
-import { colors, radius, spacing } from '@/constants/theme';
+import { Card, ListRow, initialsOf } from '@/components/ui/Card';
+import { Screen, SectionTitle } from '@/components/ui/Screen';
+import { WaxMark } from '@/components/ui/WaxMark';
+import { colors, fonts, radius, spacing, type } from '@/constants/theme';
 import { useBoutique } from '@/lib/BoutiqueContext';
 import { getCategory } from '@/lib/categories';
 import { getDashboardStats, getMeta, listDebts, listLowStock, listSales } from '@/lib/db/queries';
-import { formatMoney, formatQty } from '@/lib/format';
+import { formatMoney, formatQty, paymentLabel } from '@/lib/format';
 import type { CustomerWithBalance, DashboardStats, Product, SaleWithDetails } from '@/lib/types';
-import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState, type ReactNode } from 'react';
+import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function HomeScreen() {
@@ -45,109 +45,123 @@ export default function HomeScreen() {
   return (
     <Screen>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Title subtitle={boutiqueName}>Bonjour</Title>
+        <View style={styles.header}>
+          <View style={{ flex: 1, paddingRight: 12 }}>
+            <Text style={type.kicker}>Maison de pagnes</Text>
+            <Text style={styles.hello}>{boutiqueName}</Text>
+            <Text style={styles.date}>
+              {new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())}
+            </Text>
+          </View>
+          <WaxMark color={colors.goldDeep} size={8} />
+        </View>
 
         <View style={styles.hero}>
-          <View>
-            <Text style={styles.heroKicker}>Ventes du jour</Text>
+          <View style={styles.heroFrame}>
+            <View style={styles.heroPattern} pointerEvents="none">
+              {[0, 1, 2, 3, 4, 5].map((index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.heroDiamond,
+                    {
+                      top: 14 + (index % 3) * 18,
+                      right: 14 + Math.floor(index / 3) * 18,
+                      opacity: 0.12 + (index % 2) * 0.08,
+                    },
+                  ]}
+                />
+              ))}
+            </View>
+            <Text style={styles.heroKicker}>Chiffre du jour</Text>
             <Text style={styles.heroValue}>{formatMoney(stats?.todayTotal ?? 0)}</Text>
-            <Text style={styles.heroMeta}>{stats?.todayCount ?? 0} vente(s) aujourd’hui</Text>
-          </View>
-          <View style={styles.heroBadge}>
-            <Ionicons name="sparkles" size={22} color={colors.ink} />
+            <Text style={styles.heroMeta}>
+              {stats?.todayCount ?? 0} vente{(stats?.todayCount ?? 0) > 1 ? 's' : ''} · marge du mois{' '}
+              {formatMoney(stats?.monthProfit ?? 0)}
+            </Text>
+            <View style={styles.heroActions}>
+              <Button
+                label="Nouvelle vente"
+                icon="cart"
+                variant="gold"
+                onPress={() => router.push('/vente/nouvelle')}
+              />
+            </View>
           </View>
         </View>
 
         <View style={styles.stats}>
           <MiniStat
-            label="Dettes"
+            label="À recouvrer"
             value={formatMoney(stats?.debtTotal ?? 0)}
-            hint={`${stats?.debtorsCount ?? 0} client(s)`}
+            hint={`${stats?.debtorsCount ?? 0} client${(stats?.debtorsCount ?? 0) > 1 ? 's' : ''}`}
             onPress={() => router.push('/dettes')}
+            tone="danger"
           />
           <MiniStat
-            label="Alerte stock"
+            label="Alertes"
             value={String(stats?.lowStockCount ?? 0)}
-            hint="à réapprovisionner"
-            danger={(stats?.lowStockCount ?? 0) > 0}
+            hint="stock bas"
             onPress={() => router.push('/stock')}
+            tone={(stats?.lowStockCount ?? 0) > 0 ? 'warn' : 'ok'}
+          />
+          <MiniStat
+            label="Mois"
+            value={formatMoney(stats?.monthTotal ?? 0)}
+            hint="chiffre d’affaires"
+            onPress={() => router.push('/ventes')}
+            tone="ok"
           />
         </View>
 
-        <View style={styles.actions}>
-          <Button label="Nouvelle vente" icon="cart" onPress={() => router.push('/vente/nouvelle')} />
-          <Button
-            label="Ajouter un produit"
-            icon="add"
-            variant="secondary"
-            onPress={() => router.push('/produit/nouveau')}
-          />
-        </View>
+        <SectionTitle>Stock à surveiller</SectionTitle>
+        {lowStock.length === 0 ? (
+          <Text style={styles.empty}>Tous les articles sont à niveau.</Text>
+        ) : (
+          lowStock.map((product) => (
+            <ListRow
+              key={product.id}
+              title={product.name}
+              subtitle={`${formatQty(product.quantity)} ${product.unit} · seuil ${formatQty(product.min_quantity)}`}
+              swatch={getCategory(product.category).color}
+              onPress={() => router.push(`/produit/${product.id}`)}
+            />
+          ))
+        )}
 
-        <Section title="Stock faible">
-          {lowStock.length === 0 ? (
-            <Text style={styles.empty}>Tous les produits sont à niveau.</Text>
-          ) : (
-            lowStock.map((product) => (
-              <Card key={product.id} onPress={() => router.push(`/produit/${product.id}`)} style={styles.rowCard}>
-                <View style={[styles.dot, { backgroundColor: getCategory(product.category).color }]} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.rowTitle}>{product.name}</Text>
-                  <Text style={styles.rowMeta}>
-                    {formatQty(product.quantity)} {product.unit} · seuil {formatQty(product.min_quantity)}
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={colors.inkSoft} />
-              </Card>
-            ))
-          )}
-        </Section>
+        <SectionTitle>Crédits ouverts</SectionTitle>
+        {debts.length === 0 ? (
+          <Text style={styles.empty}>Aucune dette en cours.</Text>
+        ) : (
+          debts.map((customer) => (
+            <ListRow
+              key={customer.id}
+              title={customer.name}
+              subtitle={customer.phone || 'Sans téléphone'}
+              initials={initialsOf(customer.name)}
+              onPress={() => router.push(`/client/${customer.id}`)}
+              right={<Text style={styles.debt}>{formatMoney(customer.balance)}</Text>}
+            />
+          ))
+        )}
 
-        <Section title="Dettes en cours">
-          {debts.length === 0 ? (
-            <Text style={styles.empty}>Aucune dette ouverte.</Text>
-          ) : (
-            debts.map((customer) => (
-              <Card key={customer.id} onPress={() => router.push(`/client/${customer.id}`)} style={styles.rowCard}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.rowTitle}>{customer.name}</Text>
-                  <Text style={styles.rowMeta}>{customer.phone || 'Sans téléphone'}</Text>
-                </View>
-                <Text style={styles.debt}>{formatMoney(customer.balance)}</Text>
-              </Card>
-            ))
-          )}
-        </Section>
-
-        <Section title="Ventes du jour">
-          {sales.length === 0 ? (
-            <Text style={styles.empty}>Pas encore de vente aujourd’hui.</Text>
-          ) : (
-            sales.map((sale) => (
-              <Card key={sale.id} onPress={() => router.push(`/vente/${sale.id}`)} style={styles.rowCard}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.rowTitle}>{sale.customer_name ?? 'Client passage'}</Text>
-                  <Text style={styles.rowMeta}>
-                    {sale.item_count} article(s) · {sale.payment_method === 'cash' ? 'Comptant' : 'Crédit'}
-                  </Text>
-                </View>
-                <Text style={styles.rowAmount}>{formatMoney(sale.total)}</Text>
-              </Card>
-            ))
-          )}
-        </Section>
-        <View style={{ height: 24 }} />
+        <SectionTitle>Dernières ventes</SectionTitle>
+        {sales.length === 0 ? (
+          <Text style={styles.empty}>Pas encore de vente aujourd’hui.</Text>
+        ) : (
+          sales.map((sale) => (
+            <ListRow
+              key={sale.id}
+              title={sale.customer_name ?? 'Client passage'}
+              subtitle={`${sale.item_count} article${sale.item_count > 1 ? 's' : ''} · ${paymentLabel(sale.payment_method)}`}
+              onPress={() => router.push(`/vente/${sale.id}`)}
+              right={<Text style={styles.amount}>{formatMoney(sale.total)}</Text>}
+            />
+          ))
+        )}
+        <View style={{ height: 28 }} />
       </ScrollView>
     </Screen>
-  );
-}
-
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <View style={{ gap: 8 }}>
-      <Text style={styles.section}>{title}</Text>
-      {children}
-    </View>
   );
 }
 
@@ -156,18 +170,21 @@ function MiniStat({
   value,
   hint,
   onPress,
-  danger,
+  tone,
 }: {
   label: string;
-  value: string;
   hint: string;
+  value: string;
   onPress: () => void;
-  danger?: boolean;
+  tone: 'danger' | 'warn' | 'ok';
 }) {
+  const color = tone === 'danger' ? colors.danger : tone === 'warn' ? colors.warning : colors.forest;
   return (
     <Card onPress={onPress} style={styles.mini}>
       <Text style={styles.miniLabel}>{label}</Text>
-      <Text style={[styles.miniValue, danger && { color: colors.danger }]}>{value}</Text>
+      <Text style={[styles.miniValue, { color }]} numberOfLines={1}>
+        {value}
+      </Text>
       <Text style={styles.miniHint}>{hint}</Text>
     </Card>
   );
@@ -175,103 +192,115 @@ function MiniStat({
 
 const styles = StyleSheet.create({
   content: {
-    gap: spacing.md,
-    paddingBottom: 32,
+    gap: 14,
+    paddingBottom: 36,
   },
-  hero: {
-    backgroundColor: colors.burgundy,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    paddingTop: 8,
+  },
+  hello: {
+    fontFamily: fonts.display,
+    fontSize: 30,
+    fontWeight: '600',
+    color: colors.ink,
+    marginTop: 6,
+    letterSpacing: -0.5,
+  },
+  date: {
+    ...type.muted,
+    textTransform: 'capitalize',
+    marginTop: 4,
+  },
+  hero: {
+    backgroundColor: colors.burgundyDark,
+    borderRadius: radius.lg,
+    padding: 2,
+  },
+  heroFrame: {
+    backgroundColor: colors.burgundy,
+    borderRadius: radius.lg - 2,
+    padding: spacing.lg,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.gold,
+  },
+  heroPattern: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+  },
+  heroDiamond: {
+    position: 'absolute',
+    width: 10,
+    height: 10,
+    backgroundColor: colors.gold,
+    transform: [{ rotate: '45deg' }],
   },
   heroKicker: {
     color: colors.goldSoft,
-    fontWeight: '700',
+    fontFamily: fonts.body,
+    fontWeight: '600',
+    letterSpacing: 2,
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    fontSize: 12,
+    fontSize: 11,
   },
   heroValue: {
     color: colors.paper,
-    fontSize: 32,
-    fontWeight: '800',
-    marginTop: 4,
+    fontFamily: fonts.display,
+    fontSize: 42,
+    fontWeight: '600',
+    marginTop: 10,
+    letterSpacing: -1,
   },
   heroMeta: {
-    color: '#F3D6CF',
-    marginTop: 4,
+    color: '#F0D2C8',
+    fontFamily: fonts.body,
+    marginTop: 6,
+    fontSize: 13,
   },
-  heroBadge: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.gold,
-    alignItems: 'center',
-    justifyContent: 'center',
+  heroActions: {
+    marginTop: 18,
   },
   stats: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
   },
   mini: {
     flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 10,
   },
   miniLabel: {
-    color: colors.inkSoft,
-    fontWeight: '700',
-    fontSize: 12,
-    textTransform: 'uppercase',
+    ...type.label,
+    fontSize: 10,
   },
   miniValue: {
-    color: colors.ink,
-    fontSize: 20,
-    fontWeight: '800',
-    marginTop: 6,
+    fontFamily: fonts.display,
+    fontSize: 15,
+    fontWeight: '600',
+    marginTop: 8,
   },
   miniHint: {
-    color: colors.inkSoft,
-    marginTop: 2,
-    fontSize: 12,
-  },
-  actions: {
-    gap: 10,
-  },
-  section: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: colors.ink,
-    marginTop: 6,
+    ...type.muted,
+    fontSize: 11,
+    marginTop: 4,
   },
   empty: {
-    color: colors.inkSoft,
+    ...type.muted,
   },
-  rowCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  rowTitle: {
-    fontWeight: '700',
-    color: colors.ink,
-  },
-  rowMeta: {
-    color: colors.inkSoft,
-    fontSize: 12,
-    marginTop: 2,
-  },
-  rowAmount: {
-    fontWeight: '800',
+  amount: {
+    ...type.money,
+    fontSize: 15,
     color: colors.forest,
   },
   debt: {
-    fontWeight: '800',
+    ...type.money,
+    fontSize: 15,
     color: colors.danger,
   },
 });

@@ -1,12 +1,11 @@
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
-import { colors, spacing } from '@/constants/theme';
+import { StackBody } from '@/components/ui/Screen';
 import { useBoutique } from '@/lib/BoutiqueContext';
+import { notify } from '@/lib/confirm';
 import { upsertCustomer } from '@/lib/db/queries';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { notify } from '@/lib/confirm';
-import { ScrollView, StyleSheet } from 'react-native';
 
 export default function NewCustomerScreen() {
   const { db, refresh } = useBoutique();
@@ -32,21 +31,11 @@ export default function NewCustomerScreen() {
   };
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.cream }} contentContainerStyle={styles.content}>
+    <StackBody>
       <Field label="Nom" value={name} onChangeText={setName} placeholder="Ex. Aminata Diallo" />
       <Field label="Téléphone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="77 000 00 00" />
       <Field label="Notes" value={notes} onChangeText={setNotes} multiline placeholder="Préférences, quartier…" />
       <Button label="Enregistrer le client" loading={saving} onPress={() => void save()} />
-    </ScrollView>
+    </StackBody>
   );
 }
-
-const styles = StyleSheet.create({
-  content: {
-    padding: spacing.md,
-    gap: spacing.md,
-    maxWidth: 560,
-    width: '100%',
-    alignSelf: 'center',
-  },
-});

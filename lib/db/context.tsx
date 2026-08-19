@@ -1,7 +1,6 @@
-import { colors } from '@/constants/theme';
+import { BrandSplash } from '@/components/ui/BrandSplash';
 import type { BoutiqueDatabase } from '@/lib/db/types';
 import { createContext, useContext, type ReactNode } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 export const DbContext = createContext<BoutiqueDatabase | null>(null);
 
@@ -14,35 +13,9 @@ export function useDatabase(): BoutiqueDatabase {
 }
 
 export function DatabaseLoadingScreen({ message }: { message?: string }) {
-  return (
-    <View style={styles.loading}>
-      <Text style={styles.brand}>PagneGest</Text>
-      <Text style={styles.tagline}>{message ?? 'Ventes · Stock · Dettes'}</Text>
-      {message ? null : <ActivityIndicator color={colors.gold} style={{ marginTop: 18 }} />}
-    </View>
-  );
+  return <BrandSplash message={message} />;
 }
 
 export function DatabaseShell({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
-
-const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    backgroundColor: colors.burgundy,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-  },
-  brand: {
-    color: colors.gold,
-    fontSize: 34,
-    fontWeight: '800',
-  },
-  tagline: {
-    color: colors.paper,
-    marginTop: 6,
-    textAlign: 'center',
-  },
-});

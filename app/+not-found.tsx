@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/Button';
-import { colors } from '@/constants/theme';
+import { colors, type } from '@/constants/theme';
 import { Stack, useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -26,8 +26,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: colors.ink,
+    ...type.title,
+    textAlign: 'center',
   },
 });

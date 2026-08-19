@@ -1,4 +1,4 @@
-import { colors, radius, spacing } from '@/constants/theme';
+import { colors, fonts, radius, shadow, spacing } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { type ReactNode } from 'react';
 import {
@@ -25,7 +25,7 @@ type Props = {
 
 const palettes: Record<Variant, { bg: string; fg: string; border: string }> = {
   primary: { bg: colors.burgundy, fg: colors.paper, border: colors.burgundy },
-  secondary: { bg: colors.paper, fg: colors.burgundy, border: colors.burgundy },
+  secondary: { bg: colors.paper, fg: colors.burgundy, border: colors.line },
   ghost: { bg: 'transparent', fg: colors.ink, border: colors.line },
   danger: { bg: colors.dangerSoft, fg: colors.danger, border: colors.dangerSoft },
   gold: { bg: colors.gold, fg: colors.ink, border: colors.gold },
@@ -47,7 +47,11 @@ export function Button({
       disabled={disabled || loading}
       style={({ pressed }) => [
         styles.base,
-        { backgroundColor: palette.bg, borderColor: palette.border, opacity: disabled ? 0.5 : pressed ? 0.86 : 1 },
+        {
+          backgroundColor: palette.bg,
+          borderColor: palette.border,
+          opacity: disabled ? 0.45 : pressed ? 0.88 : 1,
+        },
         style,
       ]}>
       {loading ? (
@@ -88,8 +92,8 @@ export function Fab({
   label?: ReactNode;
 }) {
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.fab, { opacity: pressed ? 0.88 : 1 }]}>
-      <Ionicons name={icon} size={22} color={colors.paper} />
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.fab, shadow.float, { opacity: pressed ? 0.9 : 1 }]}>
+      <Ionicons name={icon} size={20} color={colors.paper} />
       {label ? <Text style={styles.fabLabel}>{label}</Text> : null}
     </Pressable>
   );
@@ -97,12 +101,12 @@ export function Fab({
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: 48,
+    minHeight: 52,
     borderRadius: radius.md,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.lg,
   },
   row: {
     flexDirection: 'row',
@@ -110,36 +114,35 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontFamily: fonts.body,
+    fontSize: 15,
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
   icon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     alignItems: 'center',
     justifyContent: 'center',
   },
   fab: {
     position: 'absolute',
     right: 18,
-    bottom: 18,
+    bottom: 22,
     backgroundColor: colors.burgundy,
     borderRadius: radius.pill,
     minHeight: 54,
-    paddingHorizontal: 18,
+    paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    shadowColor: colors.burgundyDark,
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 5,
   },
   fabLabel: {
     color: colors.paper,
-    fontWeight: '800',
-    fontSize: 15,
+    fontFamily: fonts.body,
+    fontWeight: '700',
+    fontSize: 14,
+    letterSpacing: 0.3,
   },
 });

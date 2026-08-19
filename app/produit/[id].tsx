@@ -1,16 +1,17 @@
+import { ProductForm } from '@/components/ProductForm';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Field } from '@/components/ui/Field';
-import { ProductForm } from '@/components/ProductForm';
-import { colors, spacing } from '@/constants/theme';
+import { StackBody } from '@/components/ui/Screen';
+import { colors, type } from '@/constants/theme';
 import { useBoutique } from '@/lib/BoutiqueContext';
+import { confirmAction, notify } from '@/lib/confirm';
 import { adjustStock, deleteProduct, getProduct, listStockMoves, upsertProduct } from '@/lib/db/queries';
 import { formatDateTime, formatQty, parseQty } from '@/lib/format';
 import type { Product, StockMove } from '@/lib/types';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { confirmAction, notify } from '@/lib/confirm';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -32,7 +33,7 @@ export default function ProductDetailScreen() {
   if (!product) {
     return (
       <View style={styles.center}>
-        <Text style={{ color: colors.inkSoft }}>Produit introuvable.</Text>
+        <Text style={type.muted}>Produit introuvable.</Text>
       </View>
     );
   }
@@ -67,11 +68,9 @@ export default function ProductDetailScreen() {
   };
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: colors.cream }}
-      contentContainerStyle={styles.content}>
+    <StackBody>
       <Card style={{ gap: 10 }}>
-        <Text style={styles.kicker}>Ajuster le stock</Text>
+        <Text style={type.kicker}>Ajuster le stock</Text>
         <Text style={styles.stock}>
           {formatQty(product.quantity)} {product.unit}
         </Text>
@@ -98,9 +97,9 @@ export default function ProductDetailScreen() {
       />
 
       <Card style={{ gap: 8 }}>
-        <Text style={styles.kicker}>Mouvements récents</Text>
+        <Text style={type.section}>Mouvements récents</Text>
         {moves.length === 0 ? (
-          <Text style={{ color: colors.inkSoft }}>Aucun mouvement.</Text>
+          <Text style={type.muted}>Aucun mouvement.</Text>
         ) : (
           moves.map((move) => (
             <View key={move.id} style={styles.move}>
@@ -108,7 +107,7 @@ export default function ProductDetailScreen() {
                 {move.type === 'in' ? 'Entrée' : move.type === 'out' ? 'Sortie' : move.type === 'sale' ? 'Vente' : 'Ajustement'}{' '}
                 · {formatQty(move.quantity)}
               </Text>
-              <Text style={{ color: colors.inkSoft, fontSize: 12 }}>
+              <Text style={type.muted}>
                 {formatDateTime(move.created_at)}
                 {move.note ? ` · ${move.note}` : ''}
               </Text>
@@ -118,33 +117,20 @@ export default function ProductDetailScreen() {
       </Card>
 
       <Button label="Supprimer le produit" variant="danger" onPress={remove} />
-      <View style={{ height: 24 }} />
-    </ScrollView>
+    </StackBody>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
-    padding: spacing.md,
-    gap: spacing.md,
-    maxWidth: 560,
-    width: '100%',
-    alignSelf: 'center',
-  },
   center: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.cream,
   },
-  kicker: {
-    fontWeight: '800',
-    color: colors.ink,
-    fontSize: 16,
-  },
   stock: {
-    fontSize: 28,
-    fontWeight: '800',
+    ...type.display,
+    fontSize: 32,
     color: colors.burgundy,
   },
   row: {
@@ -152,12 +138,12 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   move: {
-    paddingVertical: 6,
+    paddingVertical: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.line,
   },
   moveType: {
-    fontWeight: '700',
-    color: colors.ink,
+    ...type.body,
+    fontWeight: '600',
   },
 });

@@ -1,10 +1,10 @@
 import { Fab } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import { Badge, Screen, Title } from '@/components/ui/Screen';
+import { ListRow } from '@/components/ui/Card';
 import { CategoryChips } from '@/components/ui/CategoryChips';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Screen, Title } from '@/components/ui/Screen';
 import { SearchBar } from '@/components/ui/SearchBar';
-import { colors, spacing } from '@/constants/theme';
+import { colors, spacing, type } from '@/constants/theme';
 import { useBoutique } from '@/lib/BoutiqueContext';
 import { getCategory } from '@/lib/categories';
 import { listProducts, productSubtitle } from '@/lib/db/queries';
@@ -33,9 +33,9 @@ export default function StockScreen() {
 
   return (
     <Screen>
-      <Title subtitle={`${products.length} article(s) en boutique`}>Stock</Title>
+      <Title subtitle={`${products.length} pièce${products.length > 1 ? 's' : ''} en magasin`}>Stock</Title>
       <View style={{ gap: spacing.sm, marginBottom: spacing.md }}>
-        <SearchBar value={query} onChangeText={setQuery} placeholder="Rechercher un pagne, un vêtement…" />
+        <SearchBar value={query} onChangeText={setQuery} placeholder="Woodin, bazin, body bébé…" />
         <CategoryChips value={category} onChange={setCategory} />
       </View>
       <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
@@ -43,24 +43,31 @@ export default function StockScreen() {
           <EmptyState
             icon="cube-outline"
             title="Aucun produit"
-            subtitle="Ajoutez vos pagnes Woodin, Phoenix, Uniwax, bazin, voile et articles bébé."
+            subtitle="Ajoutez pagnes Woodin, Phoenix, Uniwax, bazin, voile et articles bébé."
           />
         ) : (
           products.map((product) => {
             const low = product.quantity <= product.min_quantity;
             return (
-              <Card key={product.id} onPress={() => router.push(`/produit/${product.id}`)} style={styles.card}>
-                <View style={[styles.swatch, { backgroundColor: getCategory(product.category).color }]} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.name}>{product.name}</Text>
-                  <Text style={styles.meta}>{productSubtitle(product)}</Text>
-                  <Text style={[styles.qty, low && { color: colors.danger }]}>
-                    {formatQty(product.quantity)} {product.unit}
-                    {low ? ' · stock faible' : ''}
-                  </Text>
-                </View>
-                <Text style={styles.price}>{formatMoney(product.sale_price)}</Text>
-              </Card>
+              <ListRow
+                key={product.id}
+                title={product.name}
+                subtitle={productSubtitle(product)}
+                swatch={getCategory(product.category).color}
+                onPress={() => router.push(`/produit/${product.id}`)}
+                right={
+                  <View style={{ alignItems: 'flex-end', gap: 4 }}>
+                    <Text style={styles.price}>{formatMoney(product.sale_price)}</Text>
+                    {low ? (
+                      <Badge label={`${formatQty(product.quantity)} bas`} tone="danger" />
+                    ) : (
+                      <Text style={styles.qty}>
+                        {formatQty(product.quantity)} {product.unit}
+                      </Text>
+                    )}
+                  </View>
+                }
+              />
             );
           })
         )}
@@ -76,33 +83,13 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingBottom: 12,
   },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  swatch: {
-    width: 12,
-    height: 44,
-    borderRadius: 8,
-  },
-  name: {
-    fontWeight: '800',
-    color: colors.ink,
-  },
-  meta: {
-    color: colors.inkSoft,
-    fontSize: 12,
-    marginTop: 2,
+  price: {
+    ...type.money,
+    fontSize: 15,
   },
   qty: {
-    marginTop: 4,
-    fontWeight: '700',
+    ...type.muted,
     color: colors.forest,
-    fontSize: 13,
-  },
-  price: {
-    fontWeight: '800',
-    color: colors.ink,
+    fontWeight: '600',
   },
 });

@@ -1,6 +1,6 @@
-import { colors, radius, spacing } from '@/constants/theme';
+import { colors, fonts, radius, spacing } from '@/constants/theme';
 import { CATEGORIES, type CategoryId } from '@/lib/categories';
-import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export function CategoryChips({
   value,
@@ -26,9 +26,10 @@ export function CategoryChips({
             style={[
               styles.chip,
               selected
-                ? { backgroundColor: item.color, borderColor: item.color }
+                ? { backgroundColor: colors.ink, borderColor: colors.ink }
                 : { backgroundColor: colors.paper, borderColor: colors.line },
             ]}>
+            <View style={[styles.dot, { backgroundColor: item.color }]} />
             <Text style={[styles.label, { color: selected ? colors.paper : colors.ink }]}>
               {item.shortLabel}
             </Text>
@@ -55,9 +56,18 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     paddingHorizontal: 12,
     paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+  dot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
   },
   label: {
-    fontWeight: '700',
+    fontFamily: fonts.body,
+    fontWeight: '600',
     fontSize: 13,
   },
 });

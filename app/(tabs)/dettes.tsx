@@ -1,17 +1,16 @@
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import { ListRow, initialsOf } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Screen, Title } from '@/components/ui/Screen';
 import { SearchBar } from '@/components/ui/SearchBar';
-import { colors, spacing } from '@/constants/theme';
+import { colors, spacing, type } from '@/constants/theme';
 import { useBoutique } from '@/lib/BoutiqueContext';
 import { listDebts } from '@/lib/db/queries';
 import { formatMoney } from '@/lib/format';
 import type { CustomerWithBalance } from '@/lib/types';
-import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function DebtsScreen() {
   const { db, version } = useBoutique();
@@ -42,8 +41,8 @@ export default function DebtsScreen() {
 
   return (
     <Screen>
-      <Title subtitle={`${debts.length} client(s) · ${formatMoney(total)} à recouvrer`}>Dettes</Title>
-      <SearchBar value={query} onChangeText={setQuery} placeholder="Nom ou téléphone du client" />
+      <Title subtitle={`${debts.length} dossier${debts.length > 1 ? 's' : ''} · ${formatMoney(total)}`}>Dettes</Title>
+      <SearchBar value={query} onChangeText={setQuery} placeholder="Nom ou téléphone" />
       <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
         {filtered.length === 0 ? (
           <EmptyState
@@ -54,23 +53,14 @@ export default function DebtsScreen() {
           />
         ) : (
           filtered.map((customer) => (
-            <Card key={customer.id} onPress={() => router.push(`/client/${customer.id}`)} style={styles.card}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.name}>{customer.name}</Text>
-                <Text style={styles.meta}>{customer.phone || 'Téléphone non renseigné'}</Text>
-              </View>
-              <Text style={styles.amount}>{formatMoney(customer.balance)}</Text>
-              {customer.phone ? (
-                <Ionicons
-                  name="call"
-                  size={18}
-                  color={colors.forest}
-                  onPress={() => Linking.openURL(`tel:${customer.phone!.replace(/\s/g, '')}`)}
-                />
-              ) : (
-                <Ionicons name="chevron-forward" size={18} color={colors.inkSoft} />
-              )}
-            </Card>
+            <ListRow
+              key={customer.id}
+              title={customer.name}
+              subtitle={customer.phone || 'Téléphone non renseigné'}
+              initials={initialsOf(customer.name)}
+              onPress={() => router.push(`/client/${customer.id}`)}
+              right={<Text style={styles.amount}>{formatMoney(customer.balance)}</Text>}
+            />
           ))
         )}
         <View style={{ height: 24 }} />
@@ -85,22 +75,9 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     paddingBottom: 24,
   },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  name: {
-    fontWeight: '800',
-    color: colors.ink,
-  },
-  meta: {
-    color: colors.inkSoft,
-    marginTop: 3,
-    fontSize: 13,
-  },
   amount: {
-    fontWeight: '800',
+    ...type.money,
+    fontSize: 15,
     color: colors.danger,
   },
 });

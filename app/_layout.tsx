@@ -1,29 +1,20 @@
-import { colors } from '@/constants/theme';
+import { BrandSplash } from '@/components/ui/BrandSplash';
+import { colors, fonts } from '@/constants/theme';
 import { BoutiqueProvider } from '@/lib/BoutiqueContext';
 import { DatabaseProvider } from '@/lib/db/DbProvider';
+import { ensureWebFonts } from '@/lib/webFonts';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Suspense } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
-export {
-  ErrorBoundary,
-} from 'expo-router';
+export { ErrorBoundary } from 'expo-router';
+
+ensureWebFonts();
 
 export const unstable_settings = {
   initialRouteName: '(tabs)',
 };
-
-function LoadingScreen() {
-  return (
-    <View style={styles.loading}>
-      <Text style={styles.brand}>PagneGest</Text>
-      <Text style={styles.tagline}>Ventes · Stock · Dettes</Text>
-      <ActivityIndicator color={colors.gold} style={{ marginTop: 18 }} />
-    </View>
-  );
-}
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -32,11 +23,11 @@ export default function RootLayout() {
   });
 
   if (!fontsLoaded) {
-    return <LoadingScreen />;
+    return <BrandSplash />;
   }
 
   return (
-    <Suspense fallback={<LoadingScreen />}>
+    <Suspense fallback={<BrandSplash />}>
       <DatabaseProvider>
         <BoutiqueProvider>
           <StatusBar style="dark" />
@@ -44,7 +35,12 @@ export default function RootLayout() {
             screenOptions={{
               headerStyle: { backgroundColor: colors.cream },
               headerTintColor: colors.burgundy,
-              headerTitleStyle: { fontWeight: '800', color: colors.ink },
+              headerTitleStyle: {
+                fontFamily: fonts.display,
+                fontWeight: '600',
+                color: colors.ink,
+                fontSize: 18,
+              },
               headerShadowVisible: false,
               contentStyle: { backgroundColor: colors.cream },
             }}>
@@ -61,22 +57,3 @@ export default function RootLayout() {
     </Suspense>
   );
 }
-
-const styles = StyleSheet.create({
-  loading: {
-    flex: 1,
-    backgroundColor: colors.burgundy,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  brand: {
-    color: colors.gold,
-    fontSize: 34,
-    fontWeight: '800',
-  },
-  tagline: {
-    color: colors.paper,
-    marginTop: 6,
-    letterSpacing: 0.6,
-  },
-});

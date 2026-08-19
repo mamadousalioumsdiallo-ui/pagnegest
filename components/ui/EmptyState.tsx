@@ -1,4 +1,4 @@
-import { colors, radius, spacing } from '@/constants/theme';
+import { colors, fonts, radius, spacing, type } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -17,7 +17,7 @@ export function EmptyState({
   return (
     <View style={styles.wrap}>
       <View style={styles.iconWrap}>
-        <Ionicons name={icon} size={28} color={colors.burgundy} />
+        <Ionicons name={icon} size={28} color={colors.goldDeep} />
       </View>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.subtitle}>{subtitle}</Text>
@@ -29,29 +29,31 @@ export function EmptyState({
 const styles = StyleSheet.create({
   wrap: {
     alignItems: 'center',
-    paddingVertical: 42,
+    paddingVertical: 48,
     paddingHorizontal: spacing.lg,
-    gap: 8,
+    gap: 10,
   },
   iconWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: colors.goldSoft,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 6,
+    marginBottom: 4,
+    borderWidth: 1,
+    borderColor: colors.line,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '800',
+    fontFamily: fonts.display,
+    fontSize: 22,
+    fontWeight: '600',
     color: colors.ink,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 14,
-    color: colors.inkSoft,
+    ...type.muted,
     textAlign: 'center',
-    lineHeight: 20,
+    maxWidth: 280,
   },
 });

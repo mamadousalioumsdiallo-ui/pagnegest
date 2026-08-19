@@ -3,17 +3,18 @@ import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Field } from '@/components/ui/Field';
 import { QuantityStepper } from '@/components/ui/QuantityStepper';
+import { StackBody } from '@/components/ui/Screen';
 import { SearchBar } from '@/components/ui/SearchBar';
-import { colors, radius, spacing } from '@/constants/theme';
+import { colors, fonts, radius, type } from '@/constants/theme';
 import { useBoutique } from '@/lib/BoutiqueContext';
+import { notify } from '@/lib/confirm';
 import { listCustomers, listProducts, recordSale } from '@/lib/db/queries';
 import { formatMoney, parseMoney } from '@/lib/format';
 import { cartTotal, paymentMethod } from '@/lib/saleMath';
 import type { CartLine, CustomerWithBalance, Product } from '@/lib/types';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { notify } from '@/lib/confirm';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function NewSaleScreen() {
   const { db, refresh } = useBoutique();
@@ -87,11 +88,8 @@ export default function NewSaleScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView
-        style={{ flex: 1, backgroundColor: colors.cream }}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled">
+    <>
+      <StackBody>
         <SearchBar value={query} onChangeText={setQuery} placeholder="Ajouter un pagne, un vêtement…" />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.products}>
           {products.slice(0, 20).map((product) => (
@@ -106,7 +104,7 @@ export default function NewSaleScreen() {
           ))}
         </ScrollView>
 
-        <Text style={styles.section}>Panier</Text>
+        <Text style={type.section}>Panier</Text>
         {cart.length === 0 ? (
           <EmptyState icon="cart-outline" title="Panier vide" subtitle="Touchez un produit pour l’ajouter à la vente." />
         ) : (
@@ -114,7 +112,7 @@ export default function NewSaleScreen() {
             <Card key={line.productId} style={styles.line}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.lineName}>{line.name}</Text>
-                <Text style={styles.muted}>
+                <Text style={type.muted}>
                   {formatMoney(line.unitPrice)} / {line.unit}
                 </Text>
               </View>
@@ -129,17 +127,17 @@ export default function NewSaleScreen() {
                 }
               />
               <Pressable onPress={() => setCart((current) => current.filter((item) => item.productId !== line.productId))}>
-                <Text style={{ color: colors.danger, fontWeight: '700' }}>Retirer</Text>
+                <Text style={styles.remove}>Retirer</Text>
               </Pressable>
             </Card>
           ))
         )}
 
-        <Text style={styles.section}>Client & paiement</Text>
+        <Text style={type.section}>Client & paiement</Text>
         <Card style={{ gap: 10 }}>
           <Pressable onPress={() => setPickerOpen(true)} style={styles.customerBtn}>
             <Text style={styles.lineName}>{customer ? customer.name : 'Client passage'}</Text>
-            <Text style={styles.muted}>{customer ? customer.phone || 'Client enregistré' : 'Touchez pour choisir un client'}</Text>
+            <Text style={type.muted}>{customer ? customer.phone || 'Client enregistré' : 'Touchez pour choisir un client'}</Text>
           </Pressable>
           <Button label="Nouveau client" variant="ghost" onPress={() => router.push('/client/nouveau')} />
           <Field
@@ -149,7 +147,7 @@ export default function NewSaleScreen() {
             keyboardType="numeric"
             placeholder={String(total)}
           />
-          <Text style={styles.muted}>
+          <Text style={type.muted}>
             Total {formatMoney(total)} · {method === 'cash' ? 'Comptant' : method === 'credit' ? 'Crédit' : 'Acompte'} · Reste{' '}
             {formatMoney(remaining)}
           </Text>
@@ -162,13 +160,12 @@ export default function NewSaleScreen() {
           disabled={cart.length === 0}
           onPress={() => void save()}
         />
-        <View style={{ height: 24 }} />
-      </ScrollView>
+      </StackBody>
 
       <Modal visible={pickerOpen} animationType="slide" transparent>
         <Pressable style={styles.overlay} onPress={() => setPickerOpen(false)}>
           <Pressable style={styles.sheet} onPress={() => undefined}>
-            <Text style={styles.section}>Choisir un client</Text>
+            <Text style={type.section}>Choisir un client</Text>
             <Pressable
               style={styles.pick}
               onPress={() => {
@@ -176,7 +173,7 @@ export default function NewSaleScreen() {
                 setPickerOpen(false);
               }}>
               <Text style={styles.lineName}>Client passage</Text>
-              <Text style={styles.muted}>Vente comptant sans fiche client</Text>
+              <Text style={type.muted}>Vente comptant sans fiche client</Text>
             </Pressable>
             {customers.map((item) => (
               <Pressable
@@ -187,7 +184,7 @@ export default function NewSaleScreen() {
                   setPickerOpen(false);
                 }}>
                 <Text style={styles.lineName}>{item.name}</Text>
-                <Text style={styles.muted}>
+                <Text style={type.muted}>
                   {item.phone || 'Sans téléphone'}
                   {item.balance > 0 ? ` · dette ${formatMoney(item.balance)}` : ''}
                 </Text>
@@ -196,18 +193,11 @@ export default function NewSaleScreen() {
           </Pressable>
         </Pressable>
       </Modal>
-    </KeyboardAvoidingView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
-    padding: spacing.md,
-    gap: spacing.md,
-    maxWidth: 560,
-    width: '100%',
-    alignSelf: 'center',
-  },
   products: {
     gap: 8,
   },
@@ -220,19 +210,13 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   productName: {
-    fontWeight: '800',
-    color: colors.ink,
-    minHeight: 36,
+    ...type.body,
+    fontWeight: '600',
+    minHeight: 40,
   },
   productMeta: {
-    color: colors.inkSoft,
-    fontSize: 12,
+    ...type.muted,
     marginTop: 6,
-  },
-  section: {
-    fontWeight: '800',
-    fontSize: 16,
-    color: colors.ink,
   },
   line: {
     flexDirection: 'row',
@@ -240,32 +224,32 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   lineName: {
-    fontWeight: '800',
-    color: colors.ink,
+    ...type.body,
+    fontWeight: '600',
   },
-  muted: {
-    color: colors.inkSoft,
-    fontSize: 13,
-    marginTop: 2,
+  remove: {
+    color: colors.danger,
+    fontFamily: fonts.body,
+    fontWeight: '600',
   },
   customerBtn: {
     paddingVertical: 4,
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(42,26,18,0.35)',
+    backgroundColor: 'rgba(26,18,13,0.45)',
     justifyContent: 'flex-end',
   },
   sheet: {
     backgroundColor: colors.paper,
-    padding: spacing.md,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    padding: 20,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     maxHeight: '70%',
     gap: 8,
   },
   pick: {
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.line,
   },
