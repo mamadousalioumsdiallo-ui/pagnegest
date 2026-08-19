@@ -3,6 +3,7 @@ import { copyFileSync, readFileSync, writeFileSync } from 'node:fs';
 const path = 'dist/index.html';
 let html = readFileSync(path, 'utf8');
 
+html = html.replace('<html lang="en"', '<html lang="fr"');
 if (!html.includes('lang=')) {
   html = html.replace('<html', '<html lang="fr"');
 }
