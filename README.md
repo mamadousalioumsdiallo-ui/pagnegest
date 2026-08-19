@@ -37,7 +37,7 @@ npx expo start --web
 
 ## Première utilisation
 
-Au premier lancement, PagneGest charge un **exemple de boutique** (pagnes, vêtements bébé, quelques ventes et dettes). Vous pouvez tout réinitialiser depuis l’onglet **Plus**.
+Au premier lancement, Hafsa Gestion charge un **exemple de boutique** (pagnes, vêtements bébé, quelques ventes et dettes). Vous pouvez tout réinitialiser depuis l’onglet **Plus**.
 
 Ajoutez ensuite vos vrais produits, vendez, et enregistrez les crédits clients.
 
