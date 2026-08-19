@@ -7,7 +7,13 @@ export default function Root({ children }: { children: ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, shrink-to-fit=cover, viewport-fit=cover"
+        />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="PagneGest" />
+        <meta name="theme-color" content="#8C2F1F" />
         <title>PagneGest — boutique de pagnes</title>
         <ScrollViewStyleReset />
         <style dangerouslySetInnerHTML={{ __html: responsiveBackground }} />
@@ -18,7 +24,12 @@ export default function Root({ children }: { children: ReactNode }) {
 }
 
 const responsiveBackground = `
-body {
+html, body, #root {
+  height: 100%;
   background-color: #F6EFE4;
+}
+body {
+  margin: 0;
+  overflow: hidden;
 }
 `;

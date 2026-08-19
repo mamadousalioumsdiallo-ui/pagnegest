@@ -1,4 +1,4 @@
-import type { SQLiteDatabase } from 'expo-sqlite';
+import type { BoutiqueDatabase } from '@/lib/db/types';
 
 import { getCategory, type CategoryId, type Unit } from '@/lib/categories';
 import { daysAgoISO, startOfDayISO, startOfMonthISO } from '@/lib/format';
@@ -17,7 +17,7 @@ import type {
   StockMove,
 } from '@/lib/types';
 
-export async function getMeta(db: SQLiteDatabase, key: string, fallback = ''): Promise<string> {
+export async function getMeta(db: BoutiqueDatabase, key: string, fallback = ''): Promise<string> {
   const row = await db.getFirstAsync<{ value: string | null }>(
     'SELECT value FROM meta WHERE key = ?',
     key
@@ -25,12 +25,12 @@ export async function getMeta(db: SQLiteDatabase, key: string, fallback = ''): P
   return row?.value ?? fallback;
 }
 
-export async function setMeta(db: SQLiteDatabase, key: string, value: string): Promise<void> {
+export async function setMeta(db: BoutiqueDatabase, key: string, value: string): Promise<void> {
   await db.runAsync('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)', key, value);
 }
 
 export async function listProducts(
-  db: SQLiteDatabase,
+  db: BoutiqueDatabase,
   options: { query?: string; category?: string | 'all' } = {}
 ): Promise<Product[]> {
   const clauses: string[] = [];
@@ -51,12 +51,12 @@ export async function listProducts(
   );
 }
 
-export async function getProduct(db: SQLiteDatabase, id: string): Promise<Product | null> {
+export async function getProduct(db: BoutiqueDatabase, id: string): Promise<Product | null> {
   return db.getFirstAsync<Product>('SELECT * FROM products WHERE id = ?', id);
 }
 
 export async function upsertProduct(
-  db: SQLiteDatabase,
+  db: BoutiqueDatabase,
   input: {
     id?: string;
     name: string;
@@ -125,7 +125,7 @@ export async function upsertProduct(
   return id;
 }
 
-export async function deleteProduct(db: SQLiteDatabase, id: string): Promise<void> {
+export async function deleteProduct(db: BoutiqueDatabase, id: string): Promise<void> {
   const used = await db.getFirstAsync<{ c: number }>(
     'SELECT COUNT(*) as c FROM sale_items WHERE product_id = ?',
     id
@@ -138,7 +138,7 @@ export async function deleteProduct(db: SQLiteDatabase, id: string): Promise<voi
 }
 
 export async function adjustStock(
-  db: SQLiteDatabase,
+  db: BoutiqueDatabase,
   productId: string,
   delta: number,
   note?: string
@@ -169,20 +169,20 @@ export async function adjustStock(
   });
 }
 
-export async function listStockMoves(db: SQLiteDatabase, productId: string): Promise<StockMove[]> {
+export async function listStockMoves(db: BoutiqueDatabase, productId: string): Promise<StockMove[]> {
   return db.getAllAsync<StockMove>(
     'SELECT * FROM stock_moves WHERE product_id = ? ORDER BY created_at DESC LIMIT 30',
     productId
   );
 }
 
-export async function listLowStock(db: SQLiteDatabase): Promise<Product[]> {
+export async function listLowStock(db: BoutiqueDatabase): Promise<Product[]> {
   return db.getAllAsync<Product>(
     'SELECT * FROM products WHERE quantity <= min_quantity ORDER BY quantity ASC, name ASC'
   );
 }
 
-export async function listCustomers(db: SQLiteDatabase, query = ''): Promise<CustomerWithBalance[]> {
+export async function listCustomers(db: BoutiqueDatabase, query = ''): Promise<CustomerWithBalance[]> {
   const like = `%${query.trim()}%`;
   const customers = query.trim()
     ? await db.getAllAsync<Customer>(
@@ -200,12 +200,12 @@ export async function listCustomers(db: SQLiteDatabase, query = ''): Promise<Cus
   return withBalances;
 }
 
-export async function getCustomer(db: SQLiteDatabase, id: string): Promise<Customer | null> {
+export async function getCustomer(db: BoutiqueDatabase, id: string): Promise<Customer | null> {
   return db.getFirstAsync<Customer>('SELECT * FROM customers WHERE id = ?', id);
 }
 
 export async function upsertCustomer(
-  db: SQLiteDatabase,
+  db: BoutiqueDatabase,
   input: { id?: string; name: string; phone?: string; notes?: string }
 ): Promise<string> {
   const id = input.id ?? createId();
@@ -231,7 +231,7 @@ export async function upsertCustomer(
   return id;
 }
 
-export async function getCustomerBalance(db: SQLiteDatabase, customerId: string): Promise<number> {
+export async function getCustomerBalance(db: BoutiqueDatabase, customerId: string): Promise<number> {
   const sales = await db.getAllAsync<{ id: string; total: number; paid: number; created_at: string }>(
     'SELECT id, total, paid, created_at FROM sales WHERE customer_id = ?',
     customerId
@@ -243,13 +243,13 @@ export async function getCustomerBalance(db: SQLiteDatabase, customerId: string)
   return customerBalance(sales, payments);
 }
 
-export async function listDebts(db: SQLiteDatabase): Promise<CustomerWithBalance[]> {
+export async function listDebts(db: BoutiqueDatabase): Promise<CustomerWithBalance[]> {
   const customers = await listCustomers(db);
   return customers.filter((customer) => customer.balance > 0).sort((a, b) => b.balance - a.balance);
 }
 
 export async function listSales(
-  db: SQLiteDatabase,
+  db: BoutiqueDatabase,
   period: 'today' | 'week' | 'month' | 'all' = 'all'
 ): Promise<SaleWithDetails[]> {
   let from = '1970-01-01T00:00:00.000Z';
@@ -270,25 +270,25 @@ export async function listSales(
   );
 }
 
-export async function getSale(db: SQLiteDatabase, id: string): Promise<Sale | null> {
+export async function getSale(db: BoutiqueDatabase, id: string): Promise<Sale | null> {
   return db.getFirstAsync<Sale>('SELECT * FROM sales WHERE id = ?', id);
 }
 
-export async function listSaleItems(db: SQLiteDatabase, saleId: string): Promise<SaleItem[]> {
+export async function listSaleItems(db: BoutiqueDatabase, saleId: string): Promise<SaleItem[]> {
   return db.getAllAsync<SaleItem>(
     'SELECT * FROM sale_items WHERE sale_id = ? ORDER BY product_name',
     saleId
   );
 }
 
-export async function listCustomerSales(db: SQLiteDatabase, customerId: string): Promise<Sale[]> {
+export async function listCustomerSales(db: BoutiqueDatabase, customerId: string): Promise<Sale[]> {
   return db.getAllAsync<Sale>(
     'SELECT * FROM sales WHERE customer_id = ? ORDER BY created_at DESC',
     customerId
   );
 }
 
-export async function listPayments(db: SQLiteDatabase, customerId: string): Promise<Payment[]> {
+export async function listPayments(db: BoutiqueDatabase, customerId: string): Promise<Payment[]> {
   return db.getAllAsync<Payment>(
     'SELECT * FROM payments WHERE customer_id = ? ORDER BY created_at DESC',
     customerId
@@ -296,7 +296,7 @@ export async function listPayments(db: SQLiteDatabase, customerId: string): Prom
 }
 
 export async function recordSale(
-  db: SQLiteDatabase,
+  db: BoutiqueDatabase,
   input: {
     customerId: string | null;
     items: CartLine[];
@@ -376,7 +376,7 @@ export async function recordSale(
 }
 
 export async function recordPayment(
-  db: SQLiteDatabase,
+  db: BoutiqueDatabase,
   input: { customerId: string; amount: number; note?: string }
 ): Promise<void> {
   const amount = Math.round(input.amount);
@@ -395,7 +395,7 @@ export async function recordPayment(
   );
 }
 
-export async function getDashboardStats(db: SQLiteDatabase): Promise<DashboardStats> {
+export async function getDashboardStats(db: BoutiqueDatabase): Promise<DashboardStats> {
   const today = startOfDayISO();
   const month = startOfMonthISO();
 
@@ -434,7 +434,7 @@ export async function getDashboardStats(db: SQLiteDatabase): Promise<DashboardSt
 }
 
 export async function topProducts(
-  db: SQLiteDatabase,
+  db: BoutiqueDatabase,
   fromISO: string
 ): Promise<{ name: string; quantity: number; total: number }[]> {
   return db.getAllAsync(

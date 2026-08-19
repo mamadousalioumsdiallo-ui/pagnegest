@@ -1,8 +1,9 @@
-import { useSQLiteContext, type SQLiteDatabase } from 'expo-sqlite';
+import { useDatabase } from '@/lib/db/DbProvider';
+import type { BoutiqueDatabase } from '@/lib/db/types';
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 
 type BoutiqueContextValue = {
-  db: SQLiteDatabase;
+  db: BoutiqueDatabase;
   version: number;
   refresh: () => void;
 };
@@ -10,7 +11,7 @@ type BoutiqueContextValue = {
 const BoutiqueContext = createContext<BoutiqueContextValue | null>(null);
 
 export function BoutiqueProvider({ children }: { children: ReactNode }) {
-  const db = useSQLiteContext();
+  const db = useDatabase();
   const [version, setVersion] = useState(0);
   const refresh = useCallback(() => setVersion((value) => value + 1), []);
   const value = useMemo(() => ({ db, version, refresh }), [db, version, refresh]);

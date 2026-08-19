@@ -13,7 +13,14 @@ Elle fonctionne **hors ligne** sur le téléphone : ventes, stock et dettes rest
 
 Les montants sont en **francs CFA** (affichés en `F`).
 
+Pour tester dans Safari (iPhone ou Mac), ouvrez :
+
+**https://mamadousalioumsdiallo-ui.github.io/pagnegest/**
+
+Vous pouvez aussi l’ajouter à l’écran d’accueil : Partager → Sur l’écran d’accueil.
+
 ## Lancer l’application
+
 
 Prérequis : Node.js 20+, puis [Expo Go](https://expo.dev/go) sur un téléphone Android ou iPhone.
 

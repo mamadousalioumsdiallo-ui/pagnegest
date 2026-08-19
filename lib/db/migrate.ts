@@ -1,10 +1,10 @@
-import type { SQLiteDatabase } from 'expo-sqlite';
+import type { BoutiqueDatabase } from '@/lib/db/types';
 
 import { createId } from '@/lib/id';
 
 const DATABASE_VERSION = 1;
 
-export async function migrateDbIfNeeded(db: SQLiteDatabase): Promise<void> {
+export async function migrateDbIfNeeded(db: BoutiqueDatabase): Promise<void> {
   const result = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
   let current = result?.user_version ?? 0;
   if (current >= DATABASE_VERSION) {
@@ -102,13 +102,13 @@ export async function migrateDbIfNeeded(db: SQLiteDatabase): Promise<void> {
   await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
 }
 
-async function seedIfEmpty(db: SQLiteDatabase): Promise<void> {
+async function seedIfEmpty(db: BoutiqueDatabase): Promise<void> {
   const existing = await db.getFirstAsync<{ c: number }>('SELECT COUNT(*) as c FROM products');
   if ((existing?.c ?? 0) > 0) return;
   await seedDemoData(db);
 }
 
-export async function seedDemoData(db: SQLiteDatabase): Promise<void> {
+export async function seedDemoData(db: BoutiqueDatabase): Promise<void> {
   const now = new Date();
   const iso = now.toISOString();
   await db.runAsync(
@@ -273,7 +273,7 @@ export async function seedDemoData(db: SQLiteDatabase): Promise<void> {
 }
 
 async function insertSale(
-  db: SQLiteDatabase,
+  db: BoutiqueDatabase,
   input: {
     customerId: string | null;
     productId: string;
@@ -322,7 +322,7 @@ async function insertSale(
   );
 }
 
-export async function resetDatabase(db: SQLiteDatabase): Promise<void> {
+export async function resetDatabase(db: BoutiqueDatabase): Promise<void> {
   await db.execAsync(`
     DELETE FROM stock_moves;
     DELETE FROM sale_items;

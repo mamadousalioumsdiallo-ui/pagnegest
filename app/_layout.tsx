@@ -1,10 +1,9 @@
 import { colors } from '@/constants/theme';
 import { BoutiqueProvider } from '@/lib/BoutiqueContext';
-import { migrateDbIfNeeded } from '@/lib/db/migrate';
+import { DatabaseProvider } from '@/lib/db/DbProvider';
 import { Stack } from 'expo-router';
-import { SQLiteProvider } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
-import { Suspense, useState } from 'react';
+import { Suspense } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 export {
@@ -25,31 +24,10 @@ function LoadingScreen() {
   );
 }
 
-function ErrorScreen({ message }: { message: string }) {
-  return (
-    <View style={styles.loading}>
-      <Text style={styles.brand}>PagneGest</Text>
-      <Text style={[styles.tagline, { textAlign: 'center', paddingHorizontal: 24 }]}>
-        Ouvrez l’application avec Expo Go sur votre téléphone pour gérer la boutique hors ligne.
-      </Text>
-      <Text style={styles.error}>{message}</Text>
-    </View>
-  );
-}
-
 export default function RootLayout() {
-  const [error, setError] = useState<Error | null>(null);
-  if (error) {
-    return <ErrorScreen message={error.message} />;
-  }
-
   return (
     <Suspense fallback={<LoadingScreen />}>
-      <SQLiteProvider
-        databaseName="pagnegest.db"
-        onInit={migrateDbIfNeeded}
-        onError={setError}
-        useSuspense>
+      <DatabaseProvider>
         <BoutiqueProvider>
           <StatusBar style="dark" />
           <Stack
@@ -69,7 +47,7 @@ export default function RootLayout() {
             <Stack.Screen name="client/[id]" options={{ title: 'Client' }} />
           </Stack>
         </BoutiqueProvider>
-      </SQLiteProvider>
+      </DatabaseProvider>
     </Suspense>
   );
 }
@@ -90,12 +68,5 @@ const styles = StyleSheet.create({
     color: colors.paper,
     marginTop: 6,
     letterSpacing: 0.6,
-  },
-  error: {
-    color: colors.goldSoft,
-    marginTop: 18,
-    paddingHorizontal: 24,
-    textAlign: 'center',
-    fontSize: 12,
   },
 });

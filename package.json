@@ -9,7 +9,9 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "test": "npx --yes tsx lib/saleMath.test.ts"
+    "test": "npx --yes tsx lib/saleMath.test.ts",
+    "predeploy": "expo export -p web && cp dist/index.html dist/404.html",
+    "deploy": "gh-pages --nojekyll -d dist"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
@@ -30,10 +32,13 @@
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
     "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.10.1"
+    "react-native-worklets": "0.10.1",
+    "sql.js": "^1.14.2"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "@types/sql.js": "^1.4.11",
+    "gh-pages": "^6.3.0",
     "typescript": "~6.0.3"
   }
 }
