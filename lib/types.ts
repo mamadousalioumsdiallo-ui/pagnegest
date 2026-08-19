@@ -11,6 +11,7 @@ export type Product = {
   cost_price: number;
   sale_price: number;
   notes: string | null;
+  image_uri: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -27,6 +28,8 @@ export type CustomerWithBalance = Customer & {
   balance: number;
 };
 
+export type SaleStatus = 'completed' | 'cancelled';
+
 export type Sale = {
   id: string;
   customer_id: string | null;
@@ -34,6 +37,8 @@ export type Sale = {
   paid: number;
   payment_method: 'cash' | 'credit' | 'mixed';
   note: string | null;
+  status: SaleStatus;
+  cancelled_at: string | null;
   created_at: string;
 };
 
@@ -45,6 +50,17 @@ export type SaleItem = {
   quantity: number;
   unit_price: number;
   cost_price: number;
+};
+
+export type SaleReturn = {
+  id: string;
+  sale_id: string;
+  sale_item_id: string;
+  product_id: string;
+  quantity: number;
+  refund_amount: number;
+  note: string | null;
+  created_at: string;
 };
 
 export type SaleWithDetails = Sale & {
@@ -63,7 +79,7 @@ export type Payment = {
 export type StockMove = {
   id: string;
   product_id: string;
-  type: 'in' | 'out' | 'sale' | 'adjust';
+  type: 'in' | 'out' | 'sale' | 'adjust' | 'return';
   quantity: number;
   note: string | null;
   created_at: string;
@@ -87,4 +103,6 @@ export type CartLine = {
   quantity: number;
   unitPrice: number;
   maxQuantity: number;
+  category: string;
+  imageUri?: string | null;
 };

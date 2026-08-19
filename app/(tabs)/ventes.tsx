@@ -34,7 +34,9 @@ export default function SalesScreen() {
     }, [load, version])
   );
 
-  const total = sales.reduce((sum, sale) => sum + sale.total, 0);
+  const total = sales
+    .filter((sale) => sale.status !== 'cancelled')
+    .reduce((sum, sale) => sum + sale.total, 0);
 
   return (
     <Screen>
@@ -58,22 +60,25 @@ export default function SalesScreen() {
             action={<Button label="Nouvelle vente" onPress={() => router.push('/vente/nouvelle')} />}
           />
         ) : (
-          sales.map((sale) => (
-            <ListRow
-              key={sale.id}
-              title={sale.customer_name ?? 'Client passage'}
-              subtitle={`${formatDateTime(sale.created_at)} · ${paymentLabel(sale.payment_method)}`}
-              onPress={() => router.push(`/vente/${sale.id}`)}
-              right={
-                <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={styles.amount}>{formatMoney(sale.total)}</Text>
-                  {sale.total > sale.paid ? (
-                    <Text style={styles.rest}>Reste {formatMoney(sale.total - sale.paid)}</Text>
-                  ) : null}
-                </View>
-              }
-            />
-          ))
+          sales.map((sale) => {
+            const cancelled = sale.status === 'cancelled';
+            return (
+              <ListRow
+                key={sale.id}
+                title={sale.customer_name ?? 'Client passage'}
+                subtitle={`${formatDateTime(sale.created_at)} · ${paymentLabel(sale.payment_method)}${cancelled ? ' · annulée' : ''}`}
+                onPress={() => router.push(`/vente/${sale.id}`)}
+                right={
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={[styles.amount, cancelled && styles.cancelled]}>{formatMoney(sale.total)}</Text>
+                    {!cancelled && sale.total > sale.paid ? (
+                      <Text style={styles.rest}>Reste {formatMoney(sale.total - sale.paid)}</Text>
+                    ) : null}
+                  </View>
+                }
+              />
+            );
+          })
         )}
         <View style={{ height: 88 }} />
       </ScrollView>
@@ -125,5 +130,9 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontWeight: '600',
     marginTop: 3,
+  },
+  cancelled: {
+    textDecorationLine: 'line-through',
+    color: colors.inkSoft,
   },
 });

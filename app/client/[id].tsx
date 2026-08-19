@@ -50,7 +50,10 @@ export default function CustomerScreen() {
     })();
   }, [db, id, version]);
 
-  const remainingMap = useMemo(() => remainingBySale(sales, payments), [sales, payments]);
+  const remainingMap = useMemo(() => {
+    const active = sales.filter((sale) => sale.status !== 'cancelled');
+    return remainingBySale(active, payments);
+  }, [sales, payments]);
 
   if (!customer) {
     return (

@@ -12,9 +12,9 @@ export default function Root({ children }: { children: ReactNode }) {
           content="width=device-width, initial-scale=1, shrink-to-fit=cover, viewport-fit=cover"
         />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-title" content="PagneGest" />
-        <meta name="theme-color" content="#6E1C16" />
-        <title>PagneGest — boutique de pagnes</title>
+        <meta name="apple-mobile-web-app-title" content="Hafsa Gestion" />
+        <meta name="theme-color" content="#1B4332" />
+        <title>Hafsa Gestion — boutique de pagnes</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
@@ -32,7 +32,7 @@ export default function Root({ children }: { children: ReactNode }) {
 const responsiveBackground = `
 html, body, #root {
   height: 100%;
-  background-color: #F3EBE0;
+  background-color: #FAF7F2;
 }
 body {
   margin: 0;

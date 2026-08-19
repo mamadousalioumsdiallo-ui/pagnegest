@@ -23,7 +23,7 @@ export default function MoreScreen() {
 
   const load = useCallback(async () => {
     const [saved, nextStats, nextTops, nextCustomers] = await Promise.all([
-      getMeta(db, 'boutique_name', 'Boutique Wax & Bébé'),
+      getMeta(db, 'boutique_name', 'Hafsa Gestion'),
       getDashboardStats(db),
       topProducts(db, startOfMonthISO()),
       listCustomers(db),
@@ -114,7 +114,7 @@ export default function MoreScreen() {
         <Card style={{ gap: 12 }}>
           <Text style={type.section}>Données d’exemple</Text>
           <Text style={type.muted}>
-            PagneGest fonctionne hors ligne sur votre téléphone. Les exemples aident à tester Woodin, Phoenix, Uniwax,
+            Hafsa Gestion fonctionne hors ligne sur votre téléphone. Les exemples aident à tester Woodin, Phoenix, Uniwax,
             bazin, voile, vêtements bébé et dettes.
           </Text>
           <Button label="Réinitialiser avec les exemples" variant="danger" onPress={confirmReset} />

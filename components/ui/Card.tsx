@@ -1,3 +1,4 @@
+import { ProductThumb } from '@/components/ui/ProductThumb';
 import { colors, fonts, radius, shadow, spacing, type } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { type ReactNode } from 'react';
@@ -32,6 +33,7 @@ export function ListRow({
   onPress,
   swatch,
   initials,
+  product,
 }: {
   title: string;
   subtitle?: string;
@@ -39,10 +41,15 @@ export function ListRow({
   onPress?: () => void;
   swatch?: string;
   initials?: string;
+  product?: { category: string; imageUri?: string | null };
 }) {
   return (
     <Card onPress={onPress} style={styles.row}>
-      {swatch ? <View style={[styles.swatch, { backgroundColor: swatch }]} /> : null}
+      {product ? (
+        <ProductThumb category={product.category} imageUri={product.imageUri} size={48} />
+      ) : swatch ? (
+        <View style={[styles.swatch, { backgroundColor: swatch }]} />
+      ) : null}
       {initials ? (
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{initials}</Text>
@@ -101,7 +108,7 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontFamily: fonts.display,
-    color: colors.burgundy,
+    color: colors.primary,
     fontWeight: '700',
     fontSize: 14,
   },

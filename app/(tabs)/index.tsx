@@ -27,7 +27,7 @@ export default function HomeScreen() {
       listLowStock(db),
       listDebts(db),
       listSales(db, 'today'),
-      getMeta(db, 'boutique_name', 'Boutique Wax & Bébé'),
+      getMeta(db, 'boutique_name', 'Hafsa Gestion'),
     ]);
     setStats(nextStats);
     setLowStock(nextLow.slice(0, 4));
@@ -47,7 +47,7 @@ export default function HomeScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <View style={{ flex: 1, paddingRight: 12 }}>
-            <Text style={type.kicker}>Maison de pagnes</Text>
+            <Text style={type.kicker}>Hafsa Gestion</Text>
             <Text style={styles.hello}>{boutiqueName}</Text>
             <Text style={styles.date}>
               {new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())}
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   heroFrame: {
-    backgroundColor: colors.burgundy,
+    backgroundColor: colors.primary,
     borderRadius: radius.lg - 2,
     padding: spacing.lg,
     overflow: 'hidden',

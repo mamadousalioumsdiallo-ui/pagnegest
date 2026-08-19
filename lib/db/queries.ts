@@ -13,9 +13,13 @@ import type {
   Product,
   Sale,
   SaleItem,
+  SaleReturn,
   SaleWithDetails,
   StockMove,
 } from '@/lib/types';
+
+const ACTIVE_SALE = "(status IS NULL OR status = 'completed')";
+const ACTIVE_SALE_S = "(s.status IS NULL OR s.status = 'completed')";
 
 export async function getMeta(db: BoutiqueDatabase, key: string, fallback = ''): Promise<string> {
   const row = await db.getFirstAsync<{ value: string | null }>(
@@ -68,16 +72,18 @@ export async function upsertProduct(
     cost_price: number;
     sale_price: number;
     notes?: string;
+    image_uri?: string | null;
   }
 ): Promise<string> {
   const now = new Date().toISOString();
   const id = input.id ?? createId();
   const existing = input.id ? await getProduct(db, input.id) : null;
+  const imageUri = input.image_uri !== undefined ? input.image_uri : (existing?.image_uri ?? null);
   if (existing) {
     await db.runAsync(
       `UPDATE products SET
         name = ?, category = ?, brand = ?, unit = ?, quantity = ?, min_quantity = ?,
-        cost_price = ?, sale_price = ?, notes = ?, updated_at = ?
+        cost_price = ?, sale_price = ?, notes = ?, image_uri = ?, updated_at = ?
        WHERE id = ?`,
       input.name.trim(),
       input.category,
@@ -88,14 +94,15 @@ export async function upsertProduct(
       input.cost_price,
       input.sale_price,
       input.notes?.trim() || null,
+      imageUri,
       now,
       id
     );
   } else {
     await db.runAsync(
       `INSERT INTO products (
-        id, name, category, brand, unit, quantity, min_quantity, cost_price, sale_price, notes, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        id, name, category, brand, unit, quantity, min_quantity, cost_price, sale_price, notes, image_uri, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       id,
       input.name.trim(),
       input.category,
@@ -106,6 +113,7 @@ export async function upsertProduct(
       input.cost_price,
       input.sale_price,
       input.notes?.trim() || null,
+      imageUri,
       now,
       now
     );
@@ -232,15 +240,25 @@ export async function upsertCustomer(
 }
 
 export async function getCustomerBalance(db: BoutiqueDatabase, customerId: string): Promise<number> {
-  const sales = await db.getAllAsync<{ id: string; total: number; paid: number; created_at: string }>(
-    'SELECT id, total, paid, created_at FROM sales WHERE customer_id = ?',
+  const sales = await db.getAllAsync<{ id: string; total: number; paid: number; created_at: string; status: string | null }>(
+    `SELECT id, total, paid, created_at, status FROM sales WHERE customer_id = ? AND ${ACTIVE_SALE}`,
     customerId
   );
+  const effectiveSales: { id: string; total: number; paid: number; created_at: string }[] = [];
+  for (const sale of sales) {
+    const returned = await getReturnTotalForSale(db, sale.id);
+    effectiveSales.push({
+      id: sale.id,
+      total: Math.max(0, sale.total - returned),
+      paid: sale.paid,
+      created_at: sale.created_at,
+    });
+  }
   const payments = await db.getAllAsync<{ amount: number }>(
     'SELECT amount FROM payments WHERE customer_id = ?',
     customerId
   );
-  return customerBalance(sales, payments);
+  return customerBalance(effectiveSales, payments);
 }
 
 export async function listDebts(db: BoutiqueDatabase): Promise<CustomerWithBalance[]> {
@@ -329,14 +347,15 @@ export async function recordSale(
     }
 
     await db.runAsync(
-      `INSERT INTO sales (id, customer_id, total, paid, payment_method, note, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO sales (id, customer_id, total, paid, payment_method, note, status, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       saleId,
       input.customerId,
       total,
       paid,
       method,
       input.note?.trim() || null,
+      'completed',
       now
     );
 
@@ -400,18 +419,34 @@ export async function getDashboardStats(db: BoutiqueDatabase): Promise<Dashboard
   const month = startOfMonthISO();
 
   const todayRow = await db.getFirstAsync<{ total: number; count: number }>(
-    'SELECT COALESCE(SUM(total), 0) as total, COUNT(*) as count FROM sales WHERE created_at >= ?',
+    `SELECT COALESCE(SUM(s.total - IFNULL(r.refunded, 0)), 0) as total,
+            COUNT(*) as count
+     FROM sales s
+     LEFT JOIN (
+       SELECT sale_id, SUM(refund_amount) as refunded FROM sale_returns GROUP BY sale_id
+     ) r ON r.sale_id = s.id
+     WHERE s.created_at >= ? AND ${ACTIVE_SALE_S}`,
     today
   );
   const monthRow = await db.getFirstAsync<{ total: number }>(
-    'SELECT COALESCE(SUM(total), 0) as total FROM sales WHERE created_at >= ?',
+    `SELECT COALESCE(SUM(s.total - IFNULL(r.refunded, 0)), 0) as total
+     FROM sales s
+     LEFT JOIN (
+       SELECT sale_id, SUM(refund_amount) as refunded FROM sale_returns GROUP BY sale_id
+     ) r ON r.sale_id = s.id
+     WHERE s.created_at >= ? AND ${ACTIVE_SALE_S}`,
     month
   );
   const profitRow = await db.getFirstAsync<{ profit: number }>(
-    `SELECT COALESCE(SUM(si.quantity * (si.unit_price - si.cost_price)), 0) as profit
+    `SELECT COALESCE(SUM(
+        (si.quantity - IFNULL(ret.qty, 0)) * (si.unit_price - si.cost_price)
+      ), 0) as profit
      FROM sale_items si
      JOIN sales s ON s.id = si.sale_id
-     WHERE s.created_at >= ?`,
+     LEFT JOIN (
+       SELECT sale_item_id, SUM(quantity) as qty FROM sale_returns GROUP BY sale_item_id
+     ) ret ON ret.sale_item_id = si.id
+     WHERE s.created_at >= ? AND ${ACTIVE_SALE_S}`,
     month
   );
   const low = await db.getFirstAsync<{ c: number }>(
@@ -443,7 +478,7 @@ export async function topProducts(
             SUM(si.quantity * si.unit_price) as total
      FROM sale_items si
      JOIN sales s ON s.id = si.sale_id
-     WHERE s.created_at >= ?
+     WHERE s.created_at >= ? AND ${ACTIVE_SALE_S}
      GROUP BY si.product_name
      ORDER BY total DESC
      LIMIT 5`,
@@ -456,3 +491,129 @@ export function productSubtitle(product: Product): string {
   const brand = product.brand ? ` · ${product.brand}` : '';
   return `${category}${brand} · ${product.unit}`;
 }
+
+export async function getReturnTotalForSale(db: BoutiqueDatabase, saleId: string): Promise<number> {
+  const row = await db.getFirstAsync<{ total: number }>(
+    'SELECT COALESCE(SUM(refund_amount), 0) as total FROM sale_returns WHERE sale_id = ?',
+    saleId
+  );
+  return row?.total ?? 0;
+}
+
+export async function getReturnedByItem(db: BoutiqueDatabase, saleId: string): Promise<Record<string, number>> {
+  const rows = await db.getAllAsync<{ sale_item_id: string; qty: number }>(
+    'SELECT sale_item_id, SUM(quantity) as qty FROM sale_returns WHERE sale_id = ? GROUP BY sale_item_id',
+    saleId
+  );
+  const map: Record<string, number> = {};
+  for (const row of rows) map[row.sale_item_id] = row.qty;
+  return map;
+}
+
+export async function listSaleReturns(db: BoutiqueDatabase, saleId: string): Promise<SaleReturn[]> {
+  return db.getAllAsync<SaleReturn>(
+    'SELECT * FROM sale_returns WHERE sale_id = ? ORDER BY created_at DESC',
+    saleId
+  );
+}
+
+export async function cancelSale(db: BoutiqueDatabase, saleId: string): Promise<void> {
+  const sale = await getSale(db, saleId);
+  if (!sale) throw new Error('Vente introuvable.');
+  if (sale.status === 'cancelled') throw new Error('Cette vente est déjà annulée.');
+
+  const items = await listSaleItems(db, saleId);
+  const returned = await getReturnedByItem(db, saleId);
+  const now = new Date().toISOString();
+
+  await db.withTransactionAsync(async () => {
+    for (const item of items) {
+      const already = returned[item.id] ?? 0;
+      const qty = item.quantity - already;
+      if (qty <= 0) continue;
+      await db.runAsync(
+        'UPDATE products SET quantity = quantity + ?, updated_at = ? WHERE id = ?',
+        qty,
+        now,
+        item.product_id
+      );
+      await db.runAsync(
+        `INSERT INTO stock_moves (id, product_id, type, quantity, note, created_at)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        createId(),
+        item.product_id,
+        'return',
+        qty,
+        'Annulation vente',
+        now
+      );
+    }
+    await db.runAsync('UPDATE sales SET status = ?, cancelled_at = ? WHERE id = ?', 'cancelled', now, saleId);
+  });
+}
+
+export async function recordItemReturn(
+  db: BoutiqueDatabase,
+  input: { saleId: string; saleItemId: string; quantity: number; note?: string }
+): Promise<void> {
+  const sale = await getSale(db, input.saleId);
+  if (!sale) throw new Error('Vente introuvable.');
+  if (sale.status === 'cancelled') throw new Error('Impossible de retourner une vente annulée.');
+
+  const item = await db.getFirstAsync<SaleItem>(
+    'SELECT * FROM sale_items WHERE id = ? AND sale_id = ?',
+    input.saleItemId,
+    input.saleId
+  );
+  if (!item) throw new Error('Article introuvable.');
+
+  const returned = await getReturnedByItem(db, input.saleId);
+  const already = returned[item.id] ?? 0;
+  const remaining = item.quantity - already;
+  const qty = Math.round(input.quantity * 100) / 100;
+  if (qty <= 0) throw new Error('Indiquez une quantité valide.');
+  if (qty > remaining + 1e-9) {
+    throw new Error(`Il reste ${remaining} unité(s) à retourner pour cet article.`);
+  }
+
+  const refundAmount = Math.round(qty * item.unit_price);
+  const now = new Date().toISOString();
+
+  await db.withTransactionAsync(async () => {
+    await db.runAsync(
+      `INSERT INTO sale_returns (id, sale_id, sale_item_id, product_id, quantity, refund_amount, note, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      createId(),
+      input.saleId,
+      item.id,
+      item.product_id,
+      qty,
+      refundAmount,
+      input.note?.trim() || null,
+      now
+    );
+    await db.runAsync(
+      'UPDATE products SET quantity = quantity + ?, updated_at = ? WHERE id = ?',
+      qty,
+      now,
+      item.product_id
+    );
+    await db.runAsync(
+      `INSERT INTO stock_moves (id, product_id, type, quantity, note, created_at)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      createId(),
+      item.product_id,
+      'return',
+      qty,
+      input.note?.trim() || 'Retour client',
+      now
+    );
+  });
+}
+
+export async function effectiveSaleTotal(db: BoutiqueDatabase, sale: Sale): Promise<number> {
+  if (sale.status === 'cancelled') return 0;
+  const returned = await getReturnTotalForSale(db, sale.id);
+  return Math.max(0, sale.total - returned);
+}
+

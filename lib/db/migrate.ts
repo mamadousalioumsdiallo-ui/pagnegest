@@ -2,7 +2,7 @@ import type { BoutiqueDatabase } from '@/lib/db/types';
 
 import { createId } from '@/lib/id';
 
-const DATABASE_VERSION = 1;
+const DATABASE_VERSION = 2;
 
 export async function migrateDbIfNeeded(db: BoutiqueDatabase): Promise<void> {
   const result = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
@@ -35,6 +35,7 @@ export async function migrateDbIfNeeded(db: BoutiqueDatabase): Promise<void> {
         cost_price INTEGER NOT NULL DEFAULT 0,
         sale_price INTEGER NOT NULL DEFAULT 0,
         notes TEXT,
+        image_uri TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       );
@@ -54,6 +55,8 @@ export async function migrateDbIfNeeded(db: BoutiqueDatabase): Promise<void> {
         paid INTEGER NOT NULL,
         payment_method TEXT NOT NULL,
         note TEXT,
+        status TEXT DEFAULT 'completed',
+        cancelled_at TEXT,
         created_at TEXT NOT NULL,
         FOREIGN KEY (customer_id) REFERENCES customers(id)
       );
@@ -93,10 +96,48 @@ export async function migrateDbIfNeeded(db: BoutiqueDatabase): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_sales_created ON sales(created_at);
       CREATE INDEX IF NOT EXISTS idx_sales_customer ON sales(customer_id);
       CREATE INDEX IF NOT EXISTS idx_payments_customer ON payments(customer_id);
+
+      CREATE TABLE IF NOT EXISTS sale_returns (
+        id TEXT PRIMARY KEY NOT NULL,
+        sale_id TEXT NOT NULL,
+        sale_item_id TEXT NOT NULL,
+        product_id TEXT NOT NULL,
+        quantity REAL NOT NULL,
+        refund_amount INTEGER NOT NULL,
+        note TEXT,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (sale_id) REFERENCES sales(id)
+      );
     `);
 
     await seedIfEmpty(db);
     current = 1;
+  }
+
+  if (current === 1) {
+    await db.execAsync(`
+      ALTER TABLE products ADD COLUMN image_uri TEXT;
+      ALTER TABLE sales ADD COLUMN status TEXT DEFAULT 'completed';
+      ALTER TABLE sales ADD COLUMN cancelled_at TEXT;
+    `);
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS sale_returns (
+        id TEXT PRIMARY KEY NOT NULL,
+        sale_id TEXT NOT NULL,
+        sale_item_id TEXT NOT NULL,
+        product_id TEXT NOT NULL,
+        quantity REAL NOT NULL,
+        refund_amount INTEGER NOT NULL,
+        note TEXT,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (sale_id) REFERENCES sales(id)
+      );
+    `);
+    current = 2;
+  }
+
+  if (current < DATABASE_VERSION) {
+    current = DATABASE_VERSION;
   }
 
   await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
@@ -114,7 +155,7 @@ export async function seedDemoData(db: BoutiqueDatabase): Promise<void> {
   await db.runAsync(
     `INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)`,
     'boutique_name',
-    'Boutique Wax & Bébé'
+    'Hafsa Gestion'
   );
 
   const products = [
@@ -146,8 +187,8 @@ export async function seedDemoData(db: BoutiqueDatabase): Promise<void> {
     productIds.push(id);
     await db.runAsync(
       `INSERT INTO products (
-        id, name, category, brand, unit, quantity, min_quantity, cost_price, sale_price, notes, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        id, name, category, brand, unit, quantity, min_quantity, cost_price, sale_price, notes, image_uri, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       id,
       product[0],
       product[1],
@@ -157,6 +198,7 @@ export async function seedDemoData(db: BoutiqueDatabase): Promise<void> {
       product[5],
       product[6],
       product[7],
+      null,
       null,
       iso,
       iso

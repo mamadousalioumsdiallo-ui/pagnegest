@@ -1,4 +1,4 @@
-# PagneGest
+# Hafsa Gestion
 
 Application mobile pour gérer une boutique de pagnes africains (Woodin, Phoenix, Uniwax), bazin, voile, tissus, vêtements bébé et enfants, et accessoires.
 

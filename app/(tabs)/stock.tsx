@@ -6,7 +6,6 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { colors, spacing, type } from '@/constants/theme';
 import { useBoutique } from '@/lib/BoutiqueContext';
-import { getCategory } from '@/lib/categories';
 import { listProducts, productSubtitle } from '@/lib/db/queries';
 import { formatMoney, formatQty } from '@/lib/format';
 import type { Product } from '@/lib/types';
@@ -53,7 +52,7 @@ export default function StockScreen() {
                 key={product.id}
                 title={product.name}
                 subtitle={productSubtitle(product)}
-                swatch={getCategory(product.category).color}
+                product={{ category: product.category, imageUri: product.image_uri }}
                 onPress={() => router.push(`/produit/${product.id}`)}
                 right={
                   <View style={{ alignItems: 'flex-end', gap: 4 }}>

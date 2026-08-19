@@ -5,7 +5,7 @@ const FONT_HREF =
 
 export function ensureWebFonts(): void {
   if (Platform.OS !== 'web' || typeof document === 'undefined') return;
-  if (document.getElementById('pagnegest-fonts')) return;
+  if (document.getElementById('hafsa-gestion-fonts')) return;
   const preconnect = document.createElement('link');
   preconnect.rel = 'preconnect';
   preconnect.href = 'https://fonts.googleapis.com';
@@ -16,7 +16,7 @@ export function ensureWebFonts(): void {
   gstatic.crossOrigin = 'anonymous';
   document.head.appendChild(gstatic);
   const link = document.createElement('link');
-  link.id = 'pagnegest-fonts';
+  link.id = 'hafsa-gestion-fonts';
   link.rel = 'stylesheet';
   link.href = FONT_HREF;
   document.head.appendChild(link);

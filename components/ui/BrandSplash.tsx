@@ -5,11 +5,11 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 export function BrandSplash({ message }: { message?: string }) {
   return (
     <View style={styles.wrap}>
-      <WaxMark color={colors.gold} size={8} />
-      <Text style={styles.brand}>PagneGest</Text>
+      <WaxMark color={colors.accent} size={8} />
+      <Text style={styles.brand}>Hafsa Gestion</Text>
       <GoldRule />
       <Text style={styles.tagline}>{message ?? 'Ventes  ·  Stock  ·  Dettes'}</Text>
-      {message ? null : <ActivityIndicator color={colors.gold} style={{ marginTop: 22 }} />}
+      {message ? null : <ActivityIndicator color={colors.accent} style={{ marginTop: 22 }} />}
     </View>
   );
 }
@@ -17,7 +17,7 @@ export function BrandSplash({ message }: { message?: string }) {
 const styles = StyleSheet.create({
   wrap: {
     flex: 1,
-    backgroundColor: colors.burgundy,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 28,
@@ -25,13 +25,14 @@ const styles = StyleSheet.create({
   brand: {
     color: colors.paper,
     fontFamily: fonts.display,
-    fontSize: 42,
+    fontSize: 38,
     fontWeight: '600',
-    letterSpacing: -0.8,
+    letterSpacing: -0.6,
     marginTop: 18,
+    textAlign: 'center',
   },
   tagline: {
-    color: colors.goldSoft,
+    color: colors.accentSoft,
     fontFamily: fonts.body,
     fontSize: 13,
     letterSpacing: 1.6,

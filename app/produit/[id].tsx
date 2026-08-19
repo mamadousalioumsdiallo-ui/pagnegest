@@ -90,7 +90,7 @@ export default function ProductDetailScreen() {
         initial={product}
         submitLabel="Enregistrer les modifications"
         onSubmit={async (value) => {
-          await upsertProduct(db, { ...value, id: product.id });
+          await upsertProduct(db, { ...value, id: product.id, image_uri: value.image_uri });
           refresh();
           notify('Enregistré', 'Le produit a été mis à jour.');
         }}
@@ -104,7 +104,15 @@ export default function ProductDetailScreen() {
           moves.map((move) => (
             <View key={move.id} style={styles.move}>
               <Text style={styles.moveType}>
-                {move.type === 'in' ? 'Entrée' : move.type === 'out' ? 'Sortie' : move.type === 'sale' ? 'Vente' : 'Ajustement'}{' '}
+                {move.type === 'in'
+                  ? 'Entrée'
+                  : move.type === 'out'
+                    ? 'Sortie'
+                    : move.type === 'sale'
+                      ? 'Vente'
+                      : move.type === 'return'
+                        ? 'Retour'
+                        : 'Ajustement'}{' '}
                 · {formatQty(move.quantity)}
               </Text>
               <Text style={type.muted}>

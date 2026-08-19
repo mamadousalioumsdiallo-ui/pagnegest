@@ -1,9 +1,11 @@
 import { Button } from '@/components/ui/Button';
 import { CategoryChips } from '@/components/ui/CategoryChips';
 import { Field } from '@/components/ui/Field';
+import { ProductThumb } from '@/components/ui/ProductThumb';
 import { colors, fonts, radius, spacing, type } from '@/constants/theme';
 import { CATEGORIES, UNITS, type CategoryId } from '@/lib/categories';
 import { formatMoney, parseMoney, parseQty } from '@/lib/format';
+import { pickProductImage } from '@/lib/pickImage';
 import type { Product } from '@/lib/types';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -51,9 +53,11 @@ export function ProductForm({
     cost_price: number;
     sale_price: number;
     notes?: string;
+    image_uri?: string | null;
   }) => Promise<void> | void;
 }) {
   const [form, setForm] = useState<ProductFormValue>(productToForm(initial));
+  const [imageUri, setImageUri] = useState<string | null>(initial?.image_uri ?? null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -84,6 +88,7 @@ export function ProductForm({
         cost_price: parseMoney(form.cost_price),
         sale_price,
         notes: form.notes,
+        image_uri: imageUri,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Enregistrement impossible.');
@@ -94,6 +99,24 @@ export function ProductForm({
 
   return (
     <View style={styles.form}>
+      <View style={styles.photoRow}>
+        <ProductThumb category={form.category} imageUri={imageUri} size={88} />
+        <View style={{ flex: 1, gap: 8 }}>
+          <Text style={type.label}>Photo du produit</Text>
+          <View style={styles.photoActions}>
+            <Button
+              label="Choisir une photo"
+              variant="secondary"
+              onPress={() => void pickProductImage().then((uri) => uri && setImageUri(uri))}
+            />
+            {imageUri ? (
+              <Button label="Retirer" variant="ghost" onPress={() => setImageUri(null)} />
+            ) : null}
+          </View>
+          <Text style={type.muted}>Sans photo, une vignette par catégorie s’affiche.</Text>
+        </View>
+      </View>
+
       <Field label="Nom" value={form.name} onChangeText={(value) => set('name', value)} placeholder="Ex. Pagne Woodin Super Wax" />
       <View style={{ gap: 6 }}>
         <Text style={type.label}>Catégorie</Text>
@@ -161,6 +184,14 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingBottom: 32,
   },
+  photoRow: {
+    flexDirection: 'row',
+    gap: 14,
+    alignItems: 'flex-start',
+  },
+  photoActions: {
+    gap: 8,
+  },
   units: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -175,8 +206,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   unitOn: {
-    backgroundColor: colors.burgundy,
-    borderColor: colors.burgundy,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   unitText: {
     color: colors.ink,

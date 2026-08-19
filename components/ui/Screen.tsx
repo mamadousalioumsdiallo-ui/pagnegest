@@ -37,7 +37,7 @@ export function Title({ children, subtitle }: { children: ReactNode; subtitle?: 
   return (
     <View style={styles.titleWrap}>
       <View style={styles.brandRow}>
-        <Text style={type.kicker}>PagneGest</Text>
+        <Text style={type.kicker}>Hafsa Gestion</Text>
         <WaxMark />
       </View>
       <Text style={styles.title}>{children}</Text>

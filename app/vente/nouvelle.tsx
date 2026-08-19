@@ -6,8 +6,9 @@ import { QuantityStepper } from '@/components/ui/QuantityStepper';
 import { StackBody } from '@/components/ui/Screen';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { colors, fonts, radius, type } from '@/constants/theme';
+import { ProductThumb } from '@/components/ui/ProductThumb';
 import { useBoutique } from '@/lib/BoutiqueContext';
-import { notify } from '@/lib/confirm';
+import { confirmAction, notify } from '@/lib/confirm';
 import { listCustomers, listProducts, recordSale } from '@/lib/db/queries';
 import { formatMoney, parseMoney } from '@/lib/format';
 import { cartTotal, paymentMethod } from '@/lib/saleMath';
@@ -64,9 +65,19 @@ export default function NewSaleScreen() {
           quantity: 1,
           unitPrice: product.sale_price,
           maxQuantity: product.quantity,
+          category: product.category,
+          imageUri: product.image_uri,
         },
       ];
     });
+  };
+
+  const clearCart = () => {
+    if (cart.length === 0) return;
+    confirmAction('Vider le panier', 'Retirer tous les articles du panier ?', () => {
+      setCart([]);
+      setPaid('');
+    }, 'Vider');
   };
 
   const save = async () => {
@@ -94,6 +105,7 @@ export default function NewSaleScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.products}>
           {products.slice(0, 20).map((product) => (
             <Pressable key={product.id} onPress={() => addProduct(product)} style={styles.productChip}>
+              <ProductThumb category={product.category} imageUri={product.image_uri} size={72} style={{ alignSelf: 'center' }} />
               <Text style={styles.productName} numberOfLines={2}>
                 {product.name}
               </Text>
@@ -104,12 +116,18 @@ export default function NewSaleScreen() {
           ))}
         </ScrollView>
 
-        <Text style={type.section}>Panier</Text>
+        <View style={styles.cartHeader}>
+          <Text style={type.section}>Panier</Text>
+          {cart.length > 0 ? (
+            <Button label="Vider le panier" variant="ghost" onPress={clearCart} />
+          ) : null}
+        </View>
         {cart.length === 0 ? (
           <EmptyState icon="cart-outline" title="Panier vide" subtitle="Touchez un produit pour l’ajouter à la vente." />
         ) : (
           cart.map((line) => (
             <Card key={line.productId} style={styles.line}>
+              <ProductThumb category={line.category} imageUri={line.imageUri} size={44} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.lineName}>{line.name}</Text>
                 <Text style={type.muted}>
@@ -202,12 +220,19 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   productChip: {
-    width: 160,
+    width: 148,
     backgroundColor: colors.paper,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.line,
-    padding: 12,
+    padding: 10,
+    gap: 8,
+  },
+  cartHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
   },
   productName: {
     ...type.body,
