@@ -13,7 +13,7 @@ import { useCallback, useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function HomeScreen() {
-  const { db, version, refresh } = useBoutique();
+  const { db, version } = useBoutique();
   const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [lowStock, setLowStock] = useState<Product[]>([]);
