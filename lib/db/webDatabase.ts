@@ -22,20 +22,42 @@ function base64ToUint8(value: string): Uint8Array {
   return bytes;
 }
 
-function wasmPath(file: string): string {
-  if (typeof window === 'undefined') return `/pagnegest/${file}`;
-  const declared = document.querySelector('base')?.href;
-  if (declared) return new URL(file, declared).toString();
-  if (window.location.pathname.startsWith('/pagnegest')) {
-    return `/pagnegest/${file}`;
+function wasmUrls(): string[] {
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  return [
+    `${origin}/pagnegest/sql-wasm.wasm`,
+    `${origin}/pagnegest/sql-wasm-browser.wasm`,
+    '/pagnegest/sql-wasm.wasm',
+    '/sql-wasm.wasm',
+    'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.13.0/sql-wasm.wasm',
+    'https://sql.js.org/dist/sql-wasm.wasm',
+  ];
+}
+
+async function loadWasmBinary(): Promise<ArrayBuffer> {
+  let lastError: unknown;
+  for (const url of wasmUrls()) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) continue;
+      const buffer = await response.arrayBuffer();
+      if (buffer.byteLength < 1000) continue;
+      return buffer;
+    } catch (error) {
+      lastError = error;
+    }
   }
-  return `/${file}`;
+  throw lastError instanceof Error
+    ? lastError
+    : new Error('Impossible de charger le moteur de base (wasm).');
 }
 
 export async function openWebDatabase(): Promise<BoutiqueDatabase> {
   const initSqlJs = (await import('sql.js')).default;
+  const wasmBinary = await loadWasmBinary();
   const SQL = await initSqlJs({
-    locateFile: (file) => wasmPath(file),
+    wasmBinary,
+    locateFile: () => wasmUrls()[0],
   });
 
   let sqlite: Database;
